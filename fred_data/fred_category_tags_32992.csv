@@ -1,0 +1,14 @@
+name,group_id,notes,created,popularity,series_count
+annual,freq,,2012-02-27 10:18:19-06,90,6
+bea,src,Bureau of Economic Analysis,2012-02-27 10:18:19-06,77,6
+gdp,gen,Gross Domestic Product,2012-02-27 10:18:19-06,79,6
+industry,gen,,2012-02-27 10:18:19-06,77,6
+metropolitan portion,gen,Metropolitan Portion of a State,2017-01-04 11:15:18-06,15,6
+nation,geot,,2012-02-27 10:18:19-06,98,6
+nsa,seas,Not Seasonally Adjusted,2012-02-27 10:18:19-06,100,6
+public domain: citation requested,cc,,2018-12-17 23:33:13-06,99,6
+usa,geo,United States of America,2012-02-27 10:18:19-06,100,6
+real,gen,,2012-02-27 10:18:19-06,72,4
+discontinued,gen,,2012-02-27 10:18:19-06,64,2
+per capita,gen,,2012-02-27 10:18:19-06,58,2
+quantity index,gen,,2012-02-27 10:18:19-06,36,2

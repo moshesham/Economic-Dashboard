@@ -1,0 +1,23 @@
+id,realtime_start,realtime_end,title,observation_start,observation_end,frequency,frequency_short,units,units_short,seasonal_adjustment,seasonal_adjustment_short,last_updated,popularity,group_popularity,notes
+NGMPUSMP,2025-11-24,2025-11-24,Total Gross Domestic Product for United States Metropolitan Portion,2001-01-01,2023-01-01,Annual,A,Millions of Dollars,Mil. of $,Not Seasonally Adjusted,NSA,2024-12-04 08:35:11-06,14,14,"The All industry total includes all Private industries and Government.
+
+Consists of all counties in a state that are parts of metropolitan statistical areas.
+
+For more information about this release go to http://www.bea.gov/newsreleases/regional/gdp_metro/gdp_metro_newsrelease.htm."
+PCRGMPUSMP,2025-11-24,2025-11-24,Total Per Capita Real GDP United States Metropolitan Portion (DISCONTINUED),2001-01-01,2017-01-01,Annual,A,Chained 2009 Dollars,Chn. 2009 $,Not Seasonally Adjusted,NSA,2018-09-18 08:31:02-05,11,11,"The All industry total includes all Private industries and Government.
+
+Consists of all counties in a state that are parts of metropolitan statistical areas.
+
+Gross Domestic Product of a given area divided by the resident population of the area.
+
+For more information about this release go to http://www.bea.gov/newsreleases/regional/gdp_metro/gdp_metro_newsrelease.htm."
+QGMPUSMP,2025-11-24,2025-11-24,Total Quantity Indexes for Real GDP for United States Metropolitan Portion,2001-01-01,2023-01-01,Annual,A,Index 2017=100,Index 2017=100,Not Seasonally Adjusted,NSA,2024-12-04 08:35:15-06,8,8,"The All industry total includes all Private industries and Government.
+
+Consists of all counties in a state that are parts of metropolitan statistical areas.
+
+For more information about this release go to http://www.bea.gov/newsreleases/regional/gdp_metro/gdp_metro_newsrelease.htm."
+RGMPUSMP,2025-11-24,2025-11-24,Total Real Gross Domestic Product for United States Metropolitan Portion,2001-01-01,2023-01-01,Annual,A,Millions of Chained 2017 Dollars,Mil. of Chn. 2017 $,Not Seasonally Adjusted,NSA,2024-12-04 08:34:03-06,26,25,"The All industry total includes all Private industries and Government.
+
+Consists of all counties in a state that are parts of metropolitan statistical areas.
+
+For more information about this release go to http://www.bea.gov/newsreleases/regional/gdp_metro/gdp_metro_newsrelease.htm."

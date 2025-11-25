@@ -14,6 +14,7 @@ from config import (
     is_offline_mode, can_use_offline_data, get_cache_dir,
     ensure_cache_dir, CACHE_EXPIRY_HOURS
 )
+from modules.auth.credentials_manager import get_credentials_manager
 
 
 def _load_cached_data(cache_file: str) -> pd.DataFrame | dict | None:
@@ -122,10 +123,20 @@ def load_fred_data(series_ids: dict) -> pd.DataFrame:
 
     # Load from API
     try:
+        # Get FRED API key from credentials manager
+        creds_manager = get_credentials_manager()
+        fred_api_key = creds_manager.get_api_key('fred')
+        
         data_frames = {}
         for name, series_id in series_ids.items():
             try:
-                df = pdr.DataReader(series_id, 'fred', start='2000-01-01')
+                # Use API key if available
+                if fred_api_key:
+                    df = pdr.DataReader(series_id, 'fred', start='2000-01-01', api_key=fred_api_key)
+                else:
+                    # Fallback to unauthenticated access
+                    df = pdr.DataReader(series_id, 'fred', start='2000-01-01')
+                
                 if not df.empty:
                     data_frames[name] = df.iloc[:, 0]
             except Exception as e:
@@ -316,7 +327,16 @@ def get_latest_value(series_id: str) -> float | None:
 
     # Load from API
     try:
-        df = pdr.DataReader(series_id, 'fred', start=(datetime.now() - timedelta(days=365)))
+        # Get FRED API key from credentials manager
+        creds_manager = get_credentials_manager()
+        fred_api_key = creds_manager.get_api_key('fred')
+        
+        # Use API key if available
+        if fred_api_key:
+            df = pdr.DataReader(series_id, 'fred', start=(datetime.now() - timedelta(days=365)), api_key=fred_api_key)
+        else:
+            df = pdr.DataReader(series_id, 'fred', start=(datetime.now() - timedelta(days=365)))
+        
         if not df.empty:
             latest_value = float(df.iloc[-1, 0])
             # Save to cache
@@ -335,6 +355,20 @@ def get_latest_value(series_id: str) -> float | None:
             except Exception:
                 pass
         return None
+
+
+@st.cache_data(ttl=3600)
+def calculate_yoy_change(series_id: str) -> float | None:
+    """
+    Calculate year-over-year percentage change (12-month change for monthly data).
+
+    Args:
+        series_id: FRED series ID
+
+    Returns:
+        Year-over-year percentage change as float
+    """
+    return calculate_percentage_change(series_id, periods=12)
 
 
 @st.cache_data(ttl=3600)
@@ -374,7 +408,16 @@ def calculate_percentage_change(series_id: str, periods: int = 4) -> float | Non
 
     # Load from API
     try:
-        df = pdr.DataReader(series_id, 'fred', start=(datetime.now() - timedelta(days=730)))
+        # Get FRED API key from credentials manager
+        creds_manager = get_credentials_manager()
+        fred_api_key = creds_manager.get_api_key('fred')
+        
+        # Use API key if available
+        if fred_api_key:
+            df = pdr.DataReader(series_id, 'fred', start=(datetime.now() - timedelta(days=730)), api_key=fred_api_key)
+        else:
+            df = pdr.DataReader(series_id, 'fred', start=(datetime.now() - timedelta(days=730)))
+        
         if not df.empty and len(df) >= periods + 1:
             latest = df.iloc[-1, 0]
             previous = df.iloc[-(periods + 1), 0]

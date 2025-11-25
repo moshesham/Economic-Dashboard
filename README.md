@@ -17,6 +17,7 @@ This dashboard serves as a high-performance analytical tool for tracking real-ti
   - Gold Price
 - **Interactive World GDP Map**: Visualize global GDP growth patterns
 - **S&P 500 Performance Chart**: 5-year historical trend analysis
+- **API Key Status**: Real-time indicator of authenticated access
 
 ### Economic Indicators Deep Dive
 - **Multi-Country Comparison**: Compare economic metrics across major economies
@@ -40,6 +41,13 @@ This dashboard serves as a high-performance analytical tool for tracking real-ti
   - 3-year VIX trend analysis
   - Real-time volatility gauge with color-coded risk levels
   - Statistical summaries (average, min, max)
+
+### 🔑 API Key Management (NEW)
+- **Secure Storage**: Encrypted API key storage using industry-standard encryption
+- **Multiple Services**: Support for FRED, Yahoo Finance, Alpha Vantage, Quandl, and more
+- **Visual Management**: User-friendly interface for adding, updating, and removing keys
+- **Status Indicators**: Real-time display of configured services
+- **Higher Limits**: Automatic use of API keys for better rate limits and reliability
 
 ## 🚀 Live Demo
 
@@ -81,7 +89,22 @@ streamlit run app.py
 
 The dashboard will open automatically in your default web browser at `http://localhost:8501`
 
-### Step 5: Run Tests (Optional)
+### Step 5: Set Up API Keys (Recommended)
+```bash
+# Quick setup with provided FRED API key
+python quickstart_api_keys.py
+
+# Or run the setup script
+python setup_credentials.py
+```
+
+**Benefits of using API keys:**
+- Higher rate limits for data requests
+- More reliable data access
+- Access to premium features
+- Better performance
+
+### Step 6: Run Tests (Optional)
 ```bash
 # Run the local testing framework
 python test_locally.py

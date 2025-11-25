@@ -29,6 +29,13 @@ data/cache/
 *.tmp
 *.temp
 
+# Credentials and API keys (IMPORTANT: Never commit these!)
+data/credentials/
+.credentials
+*.key
+*.enc
+api_keys.json
+
 # Environment variables
 .env
 .env.local
