@@ -42,6 +42,21 @@ This dashboard serves as a high-performance analytical tool for tracking real-ti
   - Real-time volatility gauge with color-coded risk levels
   - Statistical summaries (average, min, max)
 
+### 📄 SEC EDGAR Data Explorer (NEW)
+- **Company Financials**: Access XBRL financial statement data via SEC's Company Facts API
+- **SEC Filings Browser**: View and analyze recent 10-K, 10-Q, 8-K, and other filings
+- **Institutional Holdings**: Track Form 13F holdings from institutional investment managers
+- **Financial Statement Data Sets**: Download quarterly FSDS data for bulk analysis
+- **CIK Lookup**: Search companies by ticker symbol or CIK number
+- **Key Metrics Visualization**: Charts for revenue, net income, and other financial trends
+
+**Available SEC Datasets:**
+- Financial Statement Data Sets (quarterly XBRL data from all filers)
+- Company Facts API (real-time standardized financial data)
+- Form 13F Holdings (institutional investor positions)
+- Fails-to-Deliver Data (settlement failure records)
+- Company Submissions (filing history and metadata)
+
 ### 🔑 API Key Management (NEW)
 - **Secure Storage**: Encrypted API key storage using industry-standard encryption
 - **Multiple Services**: Support for FRED, Yahoo Finance, Alpha Vantage, Quandl, and more
@@ -290,6 +305,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 - Federal Reserve Bank of St. Louis for FRED API
 - Yahoo Finance for market data API
+- U.S. Securities and Exchange Commission (SEC) for EDGAR API and financial datasets
 - Streamlit team for the amazing framework
 - Plotly for powerful visualization tools
 

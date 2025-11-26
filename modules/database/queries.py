@@ -499,3 +499,342 @@ def insert_technical_features(df: pd.DataFrame) -> int:
     db.insert_df(df, 'technical_features', if_exists='append')
     
     return len(df)
+
+
+# ============================================================================
+# SEC DATA QUERIES
+# ============================================================================
+
+def get_sec_company_facts(cik: str, concepts: Optional[List[str]] = None,
+                          start_date: Optional[str] = None,
+                          end_date: Optional[str] = None) -> pd.DataFrame:
+    """
+    Retrieve SEC company facts for a specific company
+    
+    Args:
+        cik: Company CIK number
+        concepts: Optional list of concepts to filter by
+        start_date: Optional start date
+        end_date: Optional end date
+        
+    Returns:
+        DataFrame with company facts
+    """
+    db = get_db_connection()
+    
+    # Build parameterized query to prevent SQL injection
+    params = [cik]
+    query = "SELECT * FROM sec_company_facts WHERE cik = ?"
+    
+    if concepts:
+        placeholders = ','.join(['?' for _ in concepts])
+        query += f" AND concept IN ({placeholders})"
+        params.extend(concepts)
+    
+    if start_date:
+        query += " AND end_date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND end_date <= ?"
+        params.append(end_date)
+    
+    query += " ORDER BY end_date DESC, concept"
+    
+    return db.query(query, tuple(params))
+
+
+def get_sec_filings(cik: Optional[str] = None, 
+                    form_types: Optional[List[str]] = None,
+                    start_date: Optional[str] = None,
+                    end_date: Optional[str] = None,
+                    limit: int = 100) -> pd.DataFrame:
+    """
+    Retrieve SEC filings from database
+    
+    Args:
+        cik: Optional company CIK to filter by
+        form_types: Optional list of form types (e.g., ['10-K', '10-Q'])
+        start_date: Optional start date for filing_date
+        end_date: Optional end date for filing_date
+        limit: Maximum records to return
+        
+    Returns:
+        DataFrame with filing records
+    """
+    db = get_db_connection()
+    
+    # Build parameterized query to prevent SQL injection
+    params = []
+    query = "SELECT * FROM sec_filings WHERE 1=1"
+    
+    if cik:
+        query += " AND cik = ?"
+        params.append(cik)
+    
+    if form_types:
+        placeholders = ','.join(['?' for _ in form_types])
+        query += f" AND form IN ({placeholders})"
+        params.extend(form_types)
+    
+    if start_date:
+        query += " AND filing_date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND filing_date <= ?"
+        params.append(end_date)
+    
+    # Limit is safe as it's an integer
+    query += f" ORDER BY filing_date DESC LIMIT {int(limit)}"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def get_sec_financial_statements(adsh: Optional[str] = None,
+                                  cik: Optional[str] = None,
+                                  tags: Optional[List[str]] = None,
+                                  year: Optional[int] = None,
+                                  quarter: Optional[int] = None) -> pd.DataFrame:
+    """
+    Retrieve SEC financial statement data
+    
+    Args:
+        adsh: Optional accession number to filter by
+        cik: Optional CIK (requires joining with submissions)
+        tags: Optional list of XBRL tags to filter by
+        year: Optional data year to filter by
+        quarter: Optional data quarter to filter by
+        
+    Returns:
+        DataFrame with financial statement data
+    """
+    db = get_db_connection()
+    
+    if cik:
+        # Need to join with submissions table
+        query = """
+            SELECT fs.*, sub.cik, sub.name, sub.form 
+            FROM sec_financial_statements fs
+            JOIN sec_submissions sub ON fs.adsh = sub.adsh
+            WHERE sub.cik = ?
+        """
+        params = [int(cik)]
+    else:
+        query = "SELECT * FROM sec_financial_statements WHERE 1=1"
+        params = []
+    
+    if adsh and not cik:
+        query += " AND adsh = ?"
+        params.append(adsh)
+    
+    if tags:
+        tags_list = "','".join(tags)
+        query += f" AND tag IN ('{tags_list}')"
+    
+    if year:
+        query += f" AND data_year = {year}"
+    
+    if quarter:
+        query += f" AND data_quarter = {quarter}"
+    
+    query += " ORDER BY ddate DESC, tag"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def get_sec_fails_to_deliver(symbol: Optional[str] = None,
+                              cusip: Optional[str] = None,
+                              start_date: Optional[str] = None,
+                              end_date: Optional[str] = None,
+                              min_quantity: Optional[int] = None) -> pd.DataFrame:
+    """
+    Retrieve SEC fails-to-deliver data
+    
+    Args:
+        symbol: Optional stock symbol to filter by
+        cusip: Optional CUSIP to filter by
+        start_date: Optional start date
+        end_date: Optional end date
+        min_quantity: Optional minimum quantity threshold
+        
+    Returns:
+        DataFrame with FTD records
+    """
+    db = get_db_connection()
+    
+    # Build parameterized query to prevent SQL injection
+    params = []
+    query = "SELECT * FROM sec_fails_to_deliver WHERE 1=1"
+    
+    if symbol:
+        query += " AND symbol = ?"
+        params.append(symbol.upper())
+    
+    if cusip:
+        query += " AND cusip = ?"
+        params.append(cusip)
+    
+    if start_date:
+        query += " AND settlement_date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND settlement_date <= ?"
+        params.append(end_date)
+    
+    if min_quantity:
+        # Integer is safe to embed directly
+        query += f" AND quantity >= {int(min_quantity)}"
+    
+    query += " ORDER BY settlement_date DESC, quantity DESC"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def get_sec_13f_holdings(cik: Optional[str] = None,
+                          cusip: Optional[str] = None,
+                          filing_date: Optional[str] = None,
+                          min_value: Optional[int] = None) -> pd.DataFrame:
+    """
+    Retrieve SEC Form 13F institutional holdings data
+    
+    Args:
+        cik: Optional institution CIK to filter by
+        cusip: Optional CUSIP to filter by
+        filing_date: Optional specific filing date
+        min_value: Optional minimum position value in USD
+        
+    Returns:
+        DataFrame with 13F holdings
+    """
+    db = get_db_connection()
+    
+    # Build parameterized query to prevent SQL injection
+    params = []
+    query = "SELECT * FROM sec_13f_holdings WHERE 1=1"
+    
+    if cik:
+        query += " AND cik = ?"
+        params.append(cik)
+    
+    if cusip:
+        query += " AND cusip = ?"
+        params.append(cusip)
+    
+    if filing_date:
+        query += " AND filing_date = ?"
+        params.append(filing_date)
+    
+    if min_value:
+        # Integer is safe to embed directly
+        query += f" AND value_usd >= {int(min_value)}"
+    
+    query += " ORDER BY filing_date DESC, value_usd DESC"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def insert_sec_filings(df: pd.DataFrame) -> int:
+    """
+    Insert SEC filing records into database
+    
+    Args:
+        df: DataFrame with filing data
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    if 'filing_date' in df.columns:
+        df['filing_date'] = pd.to_datetime(df['filing_date'])
+    if 'report_date' in df.columns:
+        df['report_date'] = pd.to_datetime(df['report_date'])
+    
+    db.insert_df(df, 'sec_filings', if_exists='append')
+    
+    return len(df)
+
+
+def insert_sec_company_facts(df: pd.DataFrame) -> int:
+    """
+    Insert SEC company facts into database
+    
+    Args:
+        df: DataFrame with company facts
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    if 'end_date' in df.columns:
+        df['end_date'] = pd.to_datetime(df['end_date'])
+    if 'filed' in df.columns:
+        df['filed'] = pd.to_datetime(df['filed'])
+    
+    db.insert_df(df, 'sec_company_facts', if_exists='append')
+    
+    return len(df)
+
+
+def insert_sec_fails_to_deliver(df: pd.DataFrame) -> int:
+    """
+    Insert SEC fails-to-deliver data into database
+    
+    Args:
+        df: DataFrame with FTD data
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    if 'settlement_date' in df.columns:
+        df['settlement_date'] = pd.to_datetime(df['settlement_date'])
+    
+    db.insert_df(df, 'sec_fails_to_deliver', if_exists='append')
+    
+    return len(df)
+
+
+def get_sec_data_freshness() -> pd.DataFrame:
+    """
+    Get the latest date for each SEC data source
+    
+    Returns:
+        DataFrame showing SEC data freshness by source
+    """
+    db = get_db_connection()
+    
+    query = """
+        SELECT 'sec_submissions' as source, MAX(filed) as latest_date, COUNT(*) as total_records
+        FROM sec_submissions
+        UNION ALL
+        SELECT 'sec_financial_statements', MAX(ddate), COUNT(*)
+        FROM sec_financial_statements
+        UNION ALL
+        SELECT 'sec_company_facts', MAX(end_date), COUNT(*)
+        FROM sec_company_facts
+        UNION ALL
+        SELECT 'sec_filings', MAX(filing_date), COUNT(*)
+        FROM sec_filings
+        UNION ALL
+        SELECT 'sec_fails_to_deliver', MAX(settlement_date), COUNT(*)
+        FROM sec_fails_to_deliver
+        UNION ALL
+        SELECT 'sec_13f_holdings', MAX(filing_date), COUNT(*)
+        FROM sec_13f_holdings
+        ORDER BY source
+    """
+    
+    return db.query(query)

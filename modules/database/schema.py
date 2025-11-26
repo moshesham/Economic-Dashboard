@@ -314,6 +314,186 @@ def create_feature_drift_table():
     db.execute("CREATE INDEX IF NOT EXISTS idx_drift_date ON feature_drift(analysis_date)")
 
 
+# =============================================================================
+# SEC Data Tables
+# =============================================================================
+
+def create_sec_submissions_table():
+    """Create table for SEC filing submissions metadata"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS sec_submissions (
+            adsh VARCHAR NOT NULL,
+            cik BIGINT NOT NULL,
+            name VARCHAR,
+            sic BIGINT,
+            countryba VARCHAR,
+            stprba VARCHAR,
+            cityba VARCHAR,
+            zipba VARCHAR,
+            bas1 VARCHAR,
+            bas2 VARCHAR,
+            baph VARCHAR,
+            countryma VARCHAR,
+            stprma VARCHAR,
+            cityma VARCHAR,
+            zipma VARCHAR,
+            mas1 VARCHAR,
+            mas2 VARCHAR,
+            countryinc VARCHAR,
+            stprinc VARCHAR,
+            ein BIGINT,
+            former VARCHAR,
+            changed VARCHAR,
+            accession VARCHAR,
+            form VARCHAR,
+            period DATE,
+            fy INTEGER,
+            fp VARCHAR,
+            filed DATE,
+            accepted TIMESTAMP,
+            preaccession VARCHAR,
+            instance VARCHAR,
+            nciks INTEGER,
+            aciks VARCHAR,
+            data_year INTEGER,
+            data_quarter INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (adsh)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_sub_cik ON sec_submissions(cik)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_sub_form ON sec_submissions(form)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_sub_filed ON sec_submissions(filed)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_sub_period ON sec_submissions(period)")
+
+
+def create_sec_financial_statements_table():
+    """Create table for SEC financial statement numeric data"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS sec_financial_statements (
+            adsh VARCHAR NOT NULL,
+            tag VARCHAR NOT NULL,
+            version VARCHAR,
+            coreg VARCHAR,
+            ddate DATE,
+            qtrs INTEGER,
+            uom VARCHAR,
+            value DOUBLE,
+            footnote VARCHAR,
+            data_year INTEGER,
+            data_quarter INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (adsh, tag, ddate, qtrs, coreg)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_fs_adsh ON sec_financial_statements(adsh)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_fs_tag ON sec_financial_statements(tag)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_fs_ddate ON sec_financial_statements(ddate)")
+
+
+def create_sec_company_facts_table():
+    """Create table for SEC company facts (XBRL data)"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS sec_company_facts (
+            cik VARCHAR NOT NULL,
+            concept VARCHAR NOT NULL,
+            unit VARCHAR,
+            value DOUBLE,
+            end_date DATE,
+            start_date DATE,
+            fiscal_year INTEGER,
+            fiscal_period VARCHAR,
+            form VARCHAR,
+            filed DATE,
+            accn VARCHAR,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (cik, concept, end_date, form, accn)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_facts_cik ON sec_company_facts(cik)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_facts_concept ON sec_company_facts(concept)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_facts_end_date ON sec_company_facts(end_date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_facts_form ON sec_company_facts(form)")
+
+
+def create_sec_filings_table():
+    """Create table for SEC filing history"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS sec_filings (
+            cik VARCHAR NOT NULL,
+            accession_number VARCHAR NOT NULL,
+            company_name VARCHAR,
+            form VARCHAR,
+            filing_date DATE,
+            report_date DATE,
+            primary_document VARCHAR,
+            description VARCHAR,
+            tickers VARCHAR,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (cik, accession_number)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_filings_cik ON sec_filings(cik)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_filings_form ON sec_filings(form)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_filings_date ON sec_filings(filing_date)")
+
+
+def create_sec_fails_to_deliver_table():
+    """Create table for SEC fails-to-deliver data"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS sec_fails_to_deliver (
+            settlement_date DATE NOT NULL,
+            cusip VARCHAR NOT NULL,
+            symbol VARCHAR,
+            quantity BIGINT,
+            description VARCHAR,
+            price DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (settlement_date, cusip)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_ftd_date ON sec_fails_to_deliver(settlement_date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_ftd_cusip ON sec_fails_to_deliver(cusip)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_ftd_symbol ON sec_fails_to_deliver(symbol)")
+
+
+def create_sec_13f_holdings_table():
+    """Create table for Form 13F institutional holdings"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS sec_13f_holdings (
+            cik VARCHAR NOT NULL,
+            filing_date DATE NOT NULL,
+            report_date DATE,
+            manager_name VARCHAR,
+            cusip VARCHAR,
+            issuer_name VARCHAR,
+            title_class VARCHAR,
+            value_usd BIGINT,
+            shares_amount BIGINT,
+            shares_type VARCHAR,
+            investment_discretion VARCHAR,
+            voting_authority_sole BIGINT,
+            voting_authority_shared BIGINT,
+            voting_authority_none BIGINT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (cik, filing_date, cusip)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_13f_cik ON sec_13f_holdings(cik)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_13f_filing_date ON sec_13f_holdings(filing_date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_sec_13f_cusip ON sec_13f_holdings(cusip)")
 def create_news_sentiment_table():
     """Create table for news article sentiment data"""
     db = get_db_connection()
@@ -419,6 +599,24 @@ def create_all_tables():
     create_feature_drift_table()
     print("✓ Created feature_drift table")
     
+    # SEC Data Tables
+    create_sec_submissions_table()
+    print("✓ Created sec_submissions table")
+    
+    create_sec_financial_statements_table()
+    print("✓ Created sec_financial_statements table")
+    
+    create_sec_company_facts_table()
+    print("✓ Created sec_company_facts table")
+    
+    create_sec_filings_table()
+    print("✓ Created sec_filings table")
+    
+    create_sec_fails_to_deliver_table()
+    print("✓ Created sec_fails_to_deliver table")
+    
+    create_sec_13f_holdings_table()
+    print("✓ Created sec_13f_holdings table")
     create_news_sentiment_table()
     print("✓ Created news_sentiment table")
     
@@ -448,7 +646,13 @@ def drop_all_tables():
         'market_indicators',
         'options_data',
         'yfinance_ohlcv',
-        'fred_data'
+        'fred_data',
+        'sec_submissions',
+        'sec_financial_statements',
+        'sec_company_facts',
+        'sec_filings',
+        'sec_fails_to_deliver',
+        'sec_13f_holdings'
     ]
     
     for table in tables:

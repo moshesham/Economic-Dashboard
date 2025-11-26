@@ -18,6 +18,16 @@ from .queries import (
     insert_options_data,
     insert_predictions,
     insert_technical_features,
+    # SEC Data Queries
+    get_sec_company_facts,
+    get_sec_filings,
+    get_sec_financial_statements,
+    get_sec_fails_to_deliver,
+    get_sec_13f_holdings,
+    insert_sec_filings,
+    insert_sec_company_facts,
+    insert_sec_fails_to_deliver,
+    get_sec_data_freshness,
 )
 
 __all__ = [
@@ -36,4 +46,14 @@ __all__ = [
     'insert_options_data',
     'insert_predictions',
     'insert_technical_features',
+    # SEC Data Exports
+    'get_sec_company_facts',
+    'get_sec_filings',
+    'get_sec_financial_statements',
+    'get_sec_fails_to_deliver',
+    'get_sec_13f_holdings',
+    'insert_sec_filings',
+    'insert_sec_company_facts',
+    'insert_sec_fails_to_deliver',
+    'get_sec_data_freshness',
 ]
