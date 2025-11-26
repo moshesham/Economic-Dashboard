@@ -28,6 +28,15 @@ from .queries import (
     insert_sec_company_facts,
     insert_sec_fails_to_deliver,
     get_sec_data_freshness,
+    # CPI Inflation Tracker Queries
+    get_cpi_price_data,
+    get_cpi_inflation_summary,
+    get_cpi_category_breakdown,
+    get_latest_cpi_values,
+    insert_cpi_price_data,
+    insert_cpi_inflation_summary,
+    insert_cpi_category_breakdown,
+    get_cpi_data_freshness,
 )
 
 __all__ = [
@@ -56,4 +65,13 @@ __all__ = [
     'insert_sec_company_facts',
     'insert_sec_fails_to_deliver',
     'get_sec_data_freshness',
+    # CPI Inflation Tracker Exports
+    'get_cpi_price_data',
+    'get_cpi_inflation_summary',
+    'get_cpi_category_breakdown',
+    'get_latest_cpi_values',
+    'insert_cpi_price_data',
+    'insert_cpi_inflation_summary',
+    'insert_cpi_category_breakdown',
+    'get_cpi_data_freshness',
 ]

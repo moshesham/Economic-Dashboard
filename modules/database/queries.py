@@ -838,3 +838,233 @@ def get_sec_data_freshness() -> pd.DataFrame:
     """
     
     return db.query(query)
+
+
+# ============================================================================
+# CPI INFLATION TRACKER QUERIES
+# ============================================================================
+
+def get_cpi_price_data(series_ids: Optional[List[str]] = None,
+                       start_date: Optional[str] = None,
+                       end_date: Optional[str] = None) -> pd.DataFrame:
+    """
+    Retrieve CPI price data for specified series
+    
+    Args:
+        series_ids: Optional list of FRED series IDs
+        start_date: Optional start date (YYYY-MM-DD)
+        end_date: Optional end date (YYYY-MM-DD)
+        
+    Returns:
+        DataFrame with CPI price data
+    """
+    db = get_db_connection()
+    
+    query = "SELECT * FROM cpi_price_data WHERE 1=1"
+    params = []
+    
+    if series_ids:
+        placeholders = ','.join(['?' for _ in series_ids])
+        query += f" AND series_id IN ({placeholders})"
+        params.extend(series_ids)
+    
+    if start_date:
+        query += " AND date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND date <= ?"
+        params.append(end_date)
+    
+    query += " ORDER BY series_id, date"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def get_cpi_inflation_summary(start_date: Optional[str] = None,
+                              end_date: Optional[str] = None) -> pd.DataFrame:
+    """
+    Retrieve CPI inflation summary data
+    
+    Args:
+        start_date: Optional start date (YYYY-MM-DD)
+        end_date: Optional end date (YYYY-MM-DD)
+        
+    Returns:
+        DataFrame with inflation summary
+    """
+    db = get_db_connection()
+    
+    query = "SELECT * FROM cpi_inflation_summary WHERE 1=1"
+    params = []
+    
+    if start_date:
+        query += " AND date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND date <= ?"
+        params.append(end_date)
+    
+    query += " ORDER BY date DESC"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def get_cpi_category_breakdown(date: Optional[str] = None,
+                               category: Optional[str] = None) -> pd.DataFrame:
+    """
+    Retrieve CPI category breakdown data
+    
+    Args:
+        date: Optional specific date (YYYY-MM-DD)
+        category: Optional category to filter by
+        
+    Returns:
+        DataFrame with category breakdown
+    """
+    db = get_db_connection()
+    
+    query = "SELECT * FROM cpi_category_breakdown WHERE 1=1"
+    params = []
+    
+    if date:
+        query += " AND date = ?"
+        params.append(date)
+    
+    if category:
+        query += " AND category = ?"
+        params.append(category)
+    
+    query += " ORDER BY date DESC, weight DESC"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def get_latest_cpi_values() -> pd.DataFrame:
+    """
+    Get the latest CPI values for all series
+    
+    Returns:
+        DataFrame with latest CPI values
+    """
+    db = get_db_connection()
+    
+    query = """
+        SELECT 
+            series_id,
+            date,
+            value,
+            yoy_change,
+            mom_change
+        FROM cpi_price_data
+        WHERE (series_id, date) IN (
+            SELECT series_id, MAX(date)
+            FROM cpi_price_data
+            GROUP BY series_id
+        )
+        ORDER BY series_id
+    """
+    
+    return db.query(query)
+
+
+def insert_cpi_price_data(df: pd.DataFrame) -> int:
+    """
+    Insert CPI price data into database
+    
+    Args:
+        df: DataFrame with columns [series_id, date, value, yoy_change, mom_change]
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'])
+    df['value'] = pd.to_numeric(df['value'], errors='coerce')
+    
+    if 'yoy_change' in df.columns:
+        df['yoy_change'] = pd.to_numeric(df['yoy_change'], errors='coerce')
+    if 'mom_change' in df.columns:
+        df['mom_change'] = pd.to_numeric(df['mom_change'], errors='coerce')
+    
+    # Select only the columns that exist
+    cols = ['series_id', 'date', 'value']
+    if 'yoy_change' in df.columns:
+        cols.append('yoy_change')
+    if 'mom_change' in df.columns:
+        cols.append('mom_change')
+    
+    db.insert_df(df[cols], 'cpi_price_data', if_exists='append')
+    
+    return len(df)
+
+
+def insert_cpi_inflation_summary(df: pd.DataFrame) -> int:
+    """
+    Insert CPI inflation summary into database
+    
+    Args:
+        df: DataFrame with inflation summary data
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'])
+    
+    db.insert_df(df, 'cpi_inflation_summary', if_exists='append')
+    
+    return len(df)
+
+
+def insert_cpi_category_breakdown(df: pd.DataFrame) -> int:
+    """
+    Insert CPI category breakdown into database
+    
+    Args:
+        df: DataFrame with category breakdown data
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'])
+    
+    db.insert_df(df, 'cpi_category_breakdown', if_exists='append')
+    
+    return len(df)
+
+
+def get_cpi_data_freshness() -> pd.DataFrame:
+    """
+    Get the latest date for each CPI data source
+    
+    Returns:
+        DataFrame showing CPI data freshness by source
+    """
+    db = get_db_connection()
+    
+    query = """
+        SELECT 'cpi_price_data' as source, MAX(date) as latest_date, COUNT(*) as total_records
+        FROM cpi_price_data
+        UNION ALL
+        SELECT 'cpi_inflation_summary', MAX(date), COUNT(*)
+        FROM cpi_inflation_summary
+        UNION ALL
+        SELECT 'cpi_category_breakdown', MAX(date), COUNT(*)
+        FROM cpi_category_breakdown
+        ORDER BY source
+    """
+    
+    return db.query(query)
