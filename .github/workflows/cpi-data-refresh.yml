@@ -1,0 +1,135 @@
+name: CPI Inflation Tracker Data Refresh
+
+on:
+  # Run weekly on Sunday at 6 AM UTC
+  schedule:
+    - cron: '0 6 * * 0'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      full_refresh:
+        description: 'Run full historical refresh (default: incremental)'
+        required: false
+        default: 'false'
+        type: boolean
+      years_back:
+        description: 'Years of historical data (for full refresh)'
+        required: false
+        default: '10'
+        type: string
+  
+  # Run on push to main when CPI files change
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/refresh_cpi_data.py'
+      - 'modules/cpi_basket_config.py'
+      - '.github/workflows/cpi-data-refresh.yml'
+
+jobs:
+  refresh-cpi-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Create data directories
+      run: |
+        mkdir -p data/cache
+        mkdir -p data/backups
+        mkdir -p data/duckdb
+    
+    - name: Run CPI data refresh
+      env:
+        PYTHONUNBUFFERED: 1
+        # Optional: Add FRED API key for higher rate limits
+        # FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      run: |
+        if [ "${{ github.event.inputs.full_refresh }}" == "true" ]; then
+          echo "Running full CPI data refresh..."
+          python scripts/refresh_cpi_data.py --full --years ${{ github.event.inputs.years_back || '10' }}
+        else
+          echo "Running incremental CPI data refresh..."
+          python scripts/refresh_cpi_data.py
+        fi
+    
+    - name: Verify data files
+      run: |
+        echo "Checking generated files..."
+        ls -la data/backups/ | grep cpi || echo "No CPI backup files found"
+        ls -la data/duckdb/ || echo "No DuckDB files found"
+    
+    - name: Check for data changes
+      id: check_changes
+      run: |
+        git add data/
+        if git diff --staged --quiet; then
+          echo "changes=false" >> $GITHUB_OUTPUT
+          echo "No data changes detected"
+        else
+          echo "changes=true" >> $GITHUB_OUTPUT
+          echo "Data changes detected"
+        fi
+    
+    - name: Commit and push updated data
+      if: steps.check_changes.outputs.changes == 'true'
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add data/
+        git commit -m "chore: CPI data refresh $(date +'%Y-%m-%d %H:%M UTC')"
+        git push
+    
+    - name: Upload CPI data as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cpi-data-${{ github.run_number }}
+        path: |
+          data/backups/*cpi*.csv
+          data/duckdb/economic_dashboard.duckdb
+        retention-days: 30
+    
+    - name: Create summary
+      if: always()
+      run: |
+        echo "### CPI Inflation Tracker Refresh Summary 📊" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Date:** $(date +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Refresh Type:** ${{ github.event.inputs.full_refresh == 'true' && 'Full' || 'Incremental' }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "**CPI Data Files:**" >> $GITHUB_STEP_SUMMARY
+        if ls data/backups/*cpi*.csv 1> /dev/null 2>&1; then
+          ls -lh data/backups/*cpi*.csv | tail -n 5 >> $GITHUB_STEP_SUMMARY
+        else
+          echo "No CPI backup files found" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**DuckDB Database:**" >> $GITHUB_STEP_SUMMARY
+        if [ -f data/duckdb/economic_dashboard.duckdb ]; then
+          ls -lh data/duckdb/economic_dashboard.duckdb >> $GITHUB_STEP_SUMMARY
+        else
+          echo "DuckDB file not found" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "::error::CPI data refresh failed. Check logs for details."

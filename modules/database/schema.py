@@ -562,6 +562,98 @@ def create_google_trends_table():
     db.execute("CREATE INDEX IF NOT EXISTS idx_trends_date ON google_trends(date)")
 
 
+# =============================================================================
+# CPI Inflation Tracker Tables
+# =============================================================================
+
+def create_cpi_basket_items_table():
+    """Create table for CPI basket item definitions"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS cpi_basket_items (
+            item_id INTEGER PRIMARY KEY,
+            name VARCHAR NOT NULL UNIQUE,
+            fred_series_id VARCHAR NOT NULL,
+            weight DOUBLE NOT NULL,
+            category VARCHAR NOT NULL,
+            subcategory VARCHAR,
+            description VARCHAR,
+            update_frequency VARCHAR DEFAULT 'monthly',
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cpi_basket_category ON cpi_basket_items(category)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cpi_basket_series ON cpi_basket_items(fred_series_id)")
+
+
+def create_cpi_price_data_table():
+    """Create table for CPI price index data"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS cpi_price_data (
+            series_id VARCHAR NOT NULL,
+            date DATE NOT NULL,
+            value DOUBLE NOT NULL,
+            yoy_change DOUBLE,
+            mom_change DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (series_id, date)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cpi_price_series ON cpi_price_data(series_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cpi_price_date ON cpi_price_data(date)")
+
+
+def create_cpi_inflation_summary_table():
+    """Create table for aggregated CPI inflation summaries"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS cpi_inflation_summary (
+            date DATE NOT NULL,
+            headline_cpi DOUBLE,
+            core_cpi DOUBLE,
+            food_cpi DOUBLE,
+            energy_cpi DOUBLE,
+            headline_yoy DOUBLE,
+            core_yoy DOUBLE,
+            food_yoy DOUBLE,
+            energy_yoy DOUBLE,
+            headline_mom DOUBLE,
+            core_mom DOUBLE,
+            weighted_basket_index DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (date)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cpi_summary_date ON cpi_inflation_summary(date)")
+
+
+def create_cpi_category_breakdown_table():
+    """Create table for CPI category-level breakdowns"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS cpi_category_breakdown (
+            date DATE NOT NULL,
+            category VARCHAR NOT NULL,
+            value DOUBLE,
+            weight DOUBLE,
+            yoy_change DOUBLE,
+            mom_change DOUBLE,
+            contribution_to_headline DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (date, category)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cpi_cat_date ON cpi_category_breakdown(date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cpi_cat_category ON cpi_category_breakdown(category)")
+
+
 def create_all_tables():
     """Create all database tables"""
     print("Creating database schema...")
@@ -626,6 +718,19 @@ def create_all_tables():
     create_google_trends_table()
     print("✓ Created google_trends table")
     
+    # CPI Inflation Tracker Tables
+    create_cpi_basket_items_table()
+    print("✓ Created cpi_basket_items table")
+    
+    create_cpi_price_data_table()
+    print("✓ Created cpi_price_data table")
+    
+    create_cpi_inflation_summary_table()
+    print("✓ Created cpi_inflation_summary table")
+    
+    create_cpi_category_breakdown_table()
+    print("✓ Created cpi_category_breakdown table")
+    
     print("\nDatabase schema created successfully!")
 
 
@@ -652,7 +757,11 @@ def drop_all_tables():
         'sec_company_facts',
         'sec_filings',
         'sec_fails_to_deliver',
-        'sec_13f_holdings'
+        'sec_13f_holdings',
+        'cpi_basket_items',
+        'cpi_price_data',
+        'cpi_inflation_summary',
+        'cpi_category_breakdown'
     ]
     
     for table in tables:
