@@ -19,25 +19,160 @@ from modules.auth.credentials_manager import get_credentials_manager
 
 # Page configuration
 st.set_page_config(
-    page_title="US Economic Dashboard",
+    page_title="Economic Dashboard | Real-Time Financial Analytics",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Title and Header
-st.title("📊 US Economic Dashboard")
-st.markdown("### Comprehensive real-time insights into the US economy")
+# Custom CSS for professional styling
+st.markdown("""
+<style>
+    /* Main header styling */
+    .main-header {
+        background: linear-gradient(135deg, #0068c9 0%, #4a00e0 100%);
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 104, 201, 0.3);
+    }
+    
+    .main-header h1 {
+        color: white !important;
+        font-size: 2.5rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .main-header p {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* Metric card styling */
+    [data-testid="stMetric"] {
+        background: linear-gradient(135deg, #081943 0%, #0a1f4d 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    [data-testid="stMetric"] label {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    [data-testid="stMetric"] [data-testid="stMetricValue"] {
+        color: white !important;
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Section headers */
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 1.5rem 0 1rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(0, 104, 201, 0.3);
+    }
+    
+    .section-header h3 {
+        color: #0068c9 !important;
+        font-weight: 600 !important;
+        margin: 0 !important;
+    }
+    
+    /* Status badge */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-online {
+        background: rgba(0, 200, 83, 0.2);
+        color: #00c853;
+        border: 1px solid rgba(0, 200, 83, 0.3);
+    }
+    
+    .status-offline {
+        background: rgba(255, 152, 0, 0.2);
+        color: #ff9800;
+        border: 1px solid rgba(255, 152, 0, 0.3);
+    }
+    
+    /* Footer styling */
+    .footer {
+        text-align: center;
+        padding: 2rem 0;
+        margin-top: 3rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    /* Navigation cards */
+    .nav-card {
+        background: linear-gradient(135deg, #081943 0%, #0a1f4d 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .nav-card:hover {
+        border-color: #0068c9;
+        box-shadow: 0 4px 20px rgba(0, 104, 201, 0.2);
+    }
+    
+    .nav-card h4 {
+        color: #0068c9 !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .nav-card p {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-size: 0.9rem !important;
+        margin: 0 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# Display last refresh timestamp
-col1, col2 = st.columns([3, 1])
-with col2:
-    st.caption(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+# Hero Header
+st.markdown("""
+<div class="main-header">
+    <h1>📊 Economic Dashboard</h1>
+    <p>Professional-grade real-time insights into the US economy and global markets</p>
+</div>
+""", unsafe_allow_html=True)
+
+# Status bar with timestamp
+col1, col2, col3 = st.columns([2, 1, 1])
+with col1:
+    if is_offline_mode():
+        st.markdown('<span class="status-badge status-offline">📴 Offline Mode</span>', unsafe_allow_html=True)
+    else:
+        st.markdown('<span class="status-badge status-online">🟢 Live Data</span>', unsafe_allow_html=True)
+with col3:
+    st.caption(f"🕐 {datetime.now().strftime('%Y-%m-%d %H:%M')}")
 
 st.divider()
 
 # ========== HEADLINE METRICS ==========
-st.subheader("🎯 Headline Economic Indicators")
+st.markdown('<div class="section-header"><h3>🎯 Headline Economic Indicators</h3></div>', unsafe_allow_html=True)
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -103,7 +238,7 @@ with col4:
 st.divider()
 
 # ========== EMPLOYMENT & WAGES ==========
-st.subheader("💼 Employment & Wages")
+st.markdown('<div class="section-header"><h3>💼 Employment & Wages</h3></div>', unsafe_allow_html=True)
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -165,7 +300,7 @@ with col4:
 st.divider()
 
 # ========== CONSUMER & HOUSING ==========
-st.subheader("🏠 Consumer & Housing")
+st.markdown('<div class="section-header"><h3>🏠 Consumer & Housing</h3></div>', unsafe_allow_html=True)
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -227,7 +362,7 @@ with col4:
 st.divider()
 
 # ========== CHARTS SECTION ==========
-st.subheader("📈 Economic Trends")
+st.markdown('<div class="section-header"><h3>📈 Economic Trends</h3></div>', unsafe_allow_html=True)
 
 col_left, col_right = st.columns(2)
 
@@ -296,65 +431,134 @@ with col_right:
 
 # Footer with navigation
 st.divider()
+
+# Navigation Section
+st.markdown('<div class="section-header"><h3>🧭 Explore Analytics</h3></div>', unsafe_allow_html=True)
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("""
+    <div class="nav-card">
+        <h4>📊 GDP & Growth</h4>
+        <p>Deep dive into economic growth, GDP components, and productivity metrics</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="nav-card" style="margin-top: 1rem;">
+        <h4>💹 Inflation & Prices</h4>
+        <p>Track consumer prices, producer prices, and inflation expectations</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    <div class="nav-card">
+        <h4>💼 Employment</h4>
+        <p>Labor market trends, wages, and workforce participation analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="nav-card" style="margin-top: 1rem;">
+        <h4>🏠 Consumer & Housing</h4>
+        <p>Spending patterns, savings, retail sales, and housing market data</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown("""
+    <div class="nav-card">
+        <h4>📈 Market Indices</h4>
+        <p>Global market performance, sector heatmaps, and correlation analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="nav-card" style="margin-top: 1rem;">
+        <h4>🔑 API Management</h4>
+        <p>Configure FRED API key for authenticated access and higher limits</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("")
+st.info("💡 **Tip:** Use the sidebar to navigate between different analytics modules")
+
+# Professional Footer
 st.markdown("""
-### 📊 Explore More
-Navigate to different sections using the sidebar:
-- **GDP & Growth**: Deep dive into economic growth, GDP components, and productivity
-- **Inflation & Prices**: Consumer prices, producer prices, and inflation expectations
-- **Employment & Wages**: Labor market trends, wages, and income analysis (Coming Soon)
-- **Consumer & Housing**: Spending, savings, retail sales, and housing market (Coming Soon)
-- **Markets & Rates**: Interest rates, Treasury yields, and monetary policy (Coming Soon)
-- **API Key Management**: Configure your FRED API key for authenticated access
-""")
+<div class="footer">
+    <p>Built with ❤️ by <strong>Moshe Sham</strong></p>
+    <p style="font-size: 0.75rem; margin-top: 0.5rem;">
+        Powered by FRED API • Yahoo Finance • Streamlit • Plotly
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # Sidebar information
 with st.sidebar:
-    st.header("About")
     st.markdown("""
-    This dashboard provides comprehensive insights into:
-    - 📊 **GDP & Economic Growth**
-    - 💰 **Inflation & Prices**
-    - 💼 **Employment & Wages**
-    - 🏠 **Consumer & Housing**
-    - 📈 **Markets & Interest Rates**
+    <div style="text-align: center; padding: 1rem 0;">
+        <h2 style="margin: 0; color: #0068c9;">📊 Economic Dashboard</h2>
+        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-top: 0.5rem;">Professional Analytics Platform</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    **Data Source:**
-    - Federal Reserve Economic Data (FRED)
+    st.divider()
     
-    **Coverage:**
-    - 60+ economic indicators
-    - Real-time data updates
-    - Historical trends & analysis
+    st.markdown("### 📋 Quick Overview")
+    st.markdown("""
+    Monitor **60+ economic indicators** including:
+    
+    - 📊 **GDP & Growth** — Real GDP, productivity
+    - 💰 **Inflation** — CPI, PCE, expectations
+    - 💼 **Employment** — Jobs, wages, claims
+    - 🏠 **Housing** — Starts, mortgage rates
+    - 📈 **Markets** — Indices, yields, volatility
     """)
 
-    # Offline mode indicator
     st.divider()
+    
+    # Connection Status
+    st.markdown("### 🔌 Connection Status")
     if is_offline_mode():
-        st.info("🔌 **Offline Mode**: Using cached/sample data")
+        st.warning("**Offline Mode**\n\nUsing cached/sample data")
     else:
-        st.success("🌐 **Online Mode**: Using live data")
+        st.success("**Online**\n\nConnected to live data feeds")
     
     # API Key status
+    st.divider()
+    st.markdown("### 🔑 API Status")
     creds_manager = get_credentials_manager()
     if creds_manager.has_api_key('fred'):
-        st.success("🔑 **FRED API**: Authenticated")
+        st.success("✅ FRED API Authenticated")
     else:
-        st.warning("🔑 **FRED API**: Using free tier")
-        st.caption("Add API key in Settings for higher limits")
+        st.warning("⚠️ Using free tier")
+        st.caption("Configure API key for higher limits")
 
     # Show data availability
-    with st.expander("📊 Data Status"):
+    with st.expander("📊 Data Availability"):
         fred_status = "✅ Available" if can_use_offline_data('fred') else "❌ Not available"
-
         st.markdown(f"**FRED Data:** {fred_status}")
         
-        # Show metrics count
-        st.markdown("**Metrics Tracked:**")
-        st.markdown("- GDP & Growth: 4 series")
-        st.markdown("- Inflation: 5 series")
-        st.markdown("- Employment: 6 series")
-        st.markdown("- Consumer: 6 series")
-        st.markdown("- Housing: 4 series")
-        st.markdown("- Interest Rates: 5 series")
+        st.markdown("**Series Tracked:**")
+        metrics_data = {
+            "GDP & Growth": 4,
+            "Inflation": 5,
+            "Employment": 6,
+            "Consumer": 6,
+            "Housing": 4,
+            "Interest Rates": 5
+        }
+        for category, count in metrics_data.items():
+            st.markdown(f"• {category}: {count} series")
 
-    st.caption("Built with Streamlit, Plotly, and Python")
+    st.divider()
+    
+    # Footer
+    st.markdown("""
+    <div style="text-align: center; padding: 1rem 0; color: rgba(255,255,255,0.5); font-size: 0.75rem;">
+        <p>v1.0.0</p>
+        <p>Built with Streamlit</p>
+    </div>
+    """, unsafe_allow_html=True)

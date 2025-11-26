@@ -1,10 +1,37 @@
-# 🌍 Global Economic & Financial Dashboard
+<div align="center">
 
-A comprehensive, interactive web application for monitoring and analyzing global economic trends and financial markets. Built with Python, Streamlit, and modern data visualization libraries.
+# 📊 Economic Dashboard
 
-## 📊 Overview
+### Professional-Grade Financial Analytics Platform
 
-This dashboard serves as a high-performance analytical tool for tracking real-time economic indicators, financial market performance, treasury yield curves, and market volatility. It aggregates data from multiple authoritative sources to provide actionable insights for analysts, investors, and economics enthusiasts.
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![FRED API](https://img.shields.io/badge/FRED-API-00529B?style=for-the-badge)](https://fred.stlouisfed.org/)
+
+**A comprehensive, real-time economic intelligence platform for tracking US macroeconomic indicators, market performance, and financial trends.**
+
+[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
+
+---
+
+</div>
+
+## 🎯 Overview
+
+The **Economic Dashboard** is an enterprise-grade analytical platform designed for financial professionals, economists, and data enthusiasts. It provides real-time access to over **60+ economic indicators** sourced from the Federal Reserve Economic Data (FRED) and Yahoo Finance, presented through an intuitive, modern interface.
+
+### Why Economic Dashboard?
+
+| Feature | Benefit |
+|---------|---------|
+| 📈 **Real-Time Data** | Live economic indicators updated automatically |
+| 🎨 **Modern UI/UX** | Professional dark theme with responsive design |
+| 🔒 **Secure** | Encrypted API key storage with industry standards |
+| ⚡ **High Performance** | Intelligent caching for lightning-fast load times |
+| 📱 **Responsive** | Works seamlessly across desktop and tablet |
+
+---
 
 ## ✨ Features
 
@@ -80,146 +107,105 @@ For detailed setup instructions, see [docs/AUTOMATED_DATA_REFRESH.md](docs/AUTOM
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
-- Python 3.10 or higher
-- pip (Python package manager)
-- Git
 
-### Step 1: Clone the Repository
+- **Python 3.10+** — [Download Python](https://python.org)
+- **pip** — Python package manager (included with Python)
+- **Git** — [Download Git](https://git-scm.com)
+
+### Installation
+
 ```bash
+# 1. Clone the repository
 git clone https://github.com/moshesham/Economic-Dashboard.git
 cd Economic-Dashboard
-```
 
-### Step 2: Create a Virtual Environment
-```bash
-# On macOS/Linux
-python3 -m venv venv
-source venv/bin/activate
-
-# On Windows
+# 2. Create virtual environment
 python -m venv venv
-venv\Scripts\activate
-```
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-### Step 3: Install Dependencies
-```bash
+# 3. Install dependencies
 pip install -r requirements.txt
-```
 
-### Step 4: Run the Application
-```bash
+# 4. Launch the dashboard
 streamlit run app.py
 ```
 
-The dashboard will open automatically in your default web browser at `http://localhost:8501`
+The dashboard will automatically open at **http://localhost:8501**
 
-### Step 5: Set Up API Keys (Recommended)
+### 🔐 API Configuration (Recommended)
+
+For enhanced rate limits and reliability, configure your API keys:
+
 ```bash
-# Quick setup with provided FRED API key
+# Quick setup with guided prompts
 python quickstart_api_keys.py
 
-# Or run the setup script
+# Or use the setup script
 python setup_credentials.py
 ```
 
-**Benefits of using API keys:**
-- Higher rate limits for data requests
-- More reliable data access
-- Access to premium features
-- Better performance
+> **💡 Pro Tip:** API keys are encrypted using industry-standard encryption and stored securely.
 
-### Step 6: Run Tests (Optional)
+---
+
+## 📖 Documentation
+
+### 📂 Project Architecture
+
+```
+Economic-Dashboard/
+├── 📱 app.py                    # Main application entry point
+├── 📁 pages/                    # Dashboard pages
+│   ├── 1_GDP_and_Growth.py
+│   ├── 2_Inflation_and_Prices.py
+│   ├── 3_Employment_and_Wages.py
+│   ├── 4_Consumer_and_Housing.py
+│   ├── 5_Markets_and_Rates.py
+│   ├── 6_API_Key_Management.py
+│   ├── 7_Market_Indices.py
+│   ├── 8_Stock_Technical_Analysis.py
+│   └── 9_News_Sentiment.py
+├── 📁 modules/                  # Core functionality
+│   ├── data_loader.py           # Data fetching & caching
+│   ├── technical_analysis.py    # TA indicators
+│   ├── sentiment_analysis.py    # News sentiment
+│   └── auth/                    # Authentication
+├── 📁 .streamlit/               # Streamlit configuration
+│   └── config.toml              # Theme & settings
+├── 📁 docs/                     # Documentation
+├── 📁 tests/                    # Test suite
+└── 📁 data/                     # Cache & sample data
+```
+
+### 🎨 Theme Configuration
+
+Customize the dashboard appearance in `.streamlit/config.toml`:
+
+```toml
+[theme]
+primaryColor = "#0068c9"
+backgroundColor = "#040f26"
+secondaryBackgroundColor = "#081943"
+textColor = "#ffffff"
+font = "sans serif"
+```
+
+### 🧪 Testing
+
 ```bash
-# Run the local testing framework
+# Run full test suite
 python test_locally.py
 
-# Or run tests manually
-python -m pytest tests/ -v
-```
-
-## 📦 Project Structure
-
-```
-economic-dashboard/
-│
-├── .github/
-│   └── workflows/          # CI/CD configurations (optional)
-│
-├── .streamlit/
-│   └── config.toml         # Streamlit app configuration and theming
-│
-├── modules/
-│   └── data_loader.py      # Data fetching and API integration functions
-│
-├── pages/
-│   ├── 1_Economic_Indicators_Deep_Dive.py
-│   └── 2_Financial_Markets_Deep_Dive.py
-│
-├── .gitignore              # Python .gitignore
-├── app.py                  # Main Streamlit application (Homepage)
-├── requirements.txt        # Python dependencies
-└── README.md               # Project documentation
-```
-
-## 🧪 Testing
-
-This project includes a comprehensive testing framework to ensure reliability and facilitate future deployments.
-
-### Local Testing
-Run the local testing script to validate the entire application:
-
-```bash
-python test_locally.py
-```
-
-This script performs:
-- ✅ Syntax checking for all Python files
-- ✅ Unit tests for data loading functions
-- ✅ Integration tests for app modules
-- ✅ Offline mode validation
-
-### Manual Testing
-Run individual test components:
-
-```bash
-# Run all tests
+# Run pytest with verbose output
 python -m pytest tests/ -v
 
-# Run specific test file
-python -m pytest tests/test_data_loader.py -v
-
-# Run with coverage (if pytest-cov installed)
+# Run with coverage report
 python -m pytest tests/ --cov=modules --cov=pages
 ```
 
-### Offline Mode
-The application supports offline mode for development and testing:
+### 🔌 Offline Mode
 
-```bash
-# Enable offline mode
-export ECONOMIC_DASHBOARD_OFFLINE=true
-streamlit run app.py
-
-# Or on Windows
-set ECONOMIC_DASHBOARD_OFFLINE=true
-streamlit run app.py
-```
-
-In offline mode, the app uses pre-generated sample data instead of calling external APIs.
-
-### CI/CD
-The project includes GitHub Actions workflow (`.github/workflows/ci-cd.yml`) that:
-- Runs tests on every push and pull request
-- Checks code syntax
-- Validates dependencies
-- Ensures deployment readiness
-
-## � Offline Mode & Caching
-
-The dashboard includes robust offline mode and caching capabilities for reliable operation.
-
-### Offline Mode
-When internet connectivity is limited or for development/testing, enable offline mode:
+Enable offline mode for development or limited connectivity:
 
 ```bash
 # Linux/macOS
@@ -235,71 +221,49 @@ set ECONOMIC_DASHBOARD_OFFLINE=true
 streamlit run app.py
 ```
 
-### Sample Data Generation
-Generate sample datasets for offline testing:
+---
 
-```bash
-python generate_sample_data.py
-```
+## 📊 Data Sources
 
-This creates:
-- `data/sample_fred_data.csv`: Economic indicators (GDP, inflation, etc.)
-- `data/sample_*_data.csv`: Stock market data for major indices
-- `data/sample_world_bank_gdp.csv`: Global GDP growth data
+| Source | Data Types | Update Frequency |
+|--------|------------|------------------|
+| **FRED** | GDP, CPI, Employment, Interest Rates | Daily |
+| **Yahoo Finance** | Stock prices, Market indices | Real-time |
+| **World Bank** | International GDP comparisons | Quarterly |
 
-### Data Caching
-The application automatically caches API responses to reduce load times and API calls:
-
-- **Cache Location**: `data/cache/`
-- **Cache Duration**: 24 hours (configurable in `config.py`)
-- **Cache Types**: FRED data, Yahoo Finance data, World Bank data, calculated values
-
-### Features in Offline Mode
-- ✅ All dashboard functionality works
-- ✅ Realistic sample data with proper time series
-- ✅ Data visualization and analysis tools
-- ✅ Sidebar shows offline mode status
-- ⚠️ Data is simulated, not real-time
-
-## 🎨 Configuration
-
-### Theme Customization
-The dashboard uses a professional dark theme. You can customize colors by editing `.streamlit/config.toml`:
-
-```toml
-[theme]
-primaryColor="#0068c9"
-backgroundColor="#040f26"
-secondaryBackgroundColor="#081943"
-textColor="#ffffff"
-font="sans serif"
-```
-
-## 📖 Usage Guide
-
-### Navigation
-Use the sidebar to navigate between different pages:
-1. **Home**: Global overview and key metrics
-2. **Economic Indicators Deep Dive**: Compare countries and indicators
-3. **Financial Markets Deep Dive**: Analyze markets, yields, and volatility
-
-### Interactivity
-- **Hover** over charts to see detailed values
-- **Select/Deselect** legend items to filter visualizations
-- **Zoom** and **pan** on charts for detailed analysis
-- **Use filters** in sidebars to customize data views
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+We welcome contributions! Here's how you can help:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+Please read our contributing guidelines and ensure tests pass before submitting.
+
+---
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
 
 ## 👨‍💻 Author
 
+<div align="center">
+
 **Moshe Sham**
+
+[![GitHub](https://img.shields.io/badge/GitHub-moshesham-181717?style=flat-square&logo=github)](https://github.com/moshesham)
+
+</div>
+
+---
 
 ## 🙏 Acknowledgments
 
@@ -309,10 +273,19 @@ This project is open source and available under the [MIT License](LICENSE).
 - Streamlit team for the amazing framework
 - Plotly for powerful visualization tools
 
-## 📞 Support
+[![FRED](https://img.shields.io/badge/Federal_Reserve-FRED_API-00529B?style=flat-square)](https://fred.stlouisfed.org/)
+[![Yahoo Finance](https://img.shields.io/badge/Yahoo-Finance_API-6001D2?style=flat-square)](https://finance.yahoo.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Framework-FF4B4B?style=flat-square&logo=streamlit)](https://streamlit.io/)
+[![Plotly](https://img.shields.io/badge/Plotly-Visualizations-3F4F75?style=flat-square&logo=plotly)](https://plotly.com/)
 
-If you encounter any issues or have questions, please open an issue on GitHub.
+</div>
 
 ---
 
-Built with ❤️ using Streamlit, Plotly, and Python
+<div align="center">
+
+**Built with ❤️ for the financial community**
+
+*Track • Analyze • Decide*
+
+</div>
