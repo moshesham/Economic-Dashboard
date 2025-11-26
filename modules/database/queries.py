@@ -42,23 +42,34 @@ def get_fred_series(series_ids: List[str], start_date: Optional[str] = None,
     return db.query(query)
 
 
-def get_stock_ohlcv(tickers: List[str], start_date: Optional[str] = None,
-                    end_date: Optional[str] = None) -> pd.DataFrame:
+def get_stock_ohlcv(tickers: Optional[List[str]] = None, ticker: Optional[str] = None,
+                    start_date: Optional[str] = None,
+                    end_date: Optional[str] = None,
+                    limit: Optional[int] = None) -> pd.DataFrame:
     """
-    Retrieve stock OHLCV data for specified tickers
+    Retrieve stock OHLCV data for specified ticker(s)
     
     Args:
-        tickers: List of stock tickers
+        tickers: List of stock tickers (optional if ticker provided)
+        ticker: Single stock ticker (optional if tickers provided)
         start_date: Optional start date (YYYY-MM-DD)
         end_date: Optional end date (YYYY-MM-DD)
+        limit: Optional limit on number of records
         
     Returns:
-        DataFrame with OHLCV data
+        DataFrame with OHLCV data, indexed by date if single ticker
     """
     db = get_db_connection()
     
-    ticker_list = "','".join(tickers)
-    query = f"SELECT * FROM yfinance_ohlcv WHERE ticker IN ('{ticker_list}')"
+    # Handle single ticker vs list
+    if ticker:
+        ticker_list = ticker
+        query = f"SELECT * FROM yfinance_ohlcv WHERE ticker = '{ticker}'"
+    elif tickers:
+        ticker_list = "','".join(tickers)
+        query = f"SELECT * FROM yfinance_ohlcv WHERE ticker IN ('{ticker_list}')"
+    else:
+        raise ValueError("Either 'ticker' or 'tickers' must be provided")
     
     if start_date:
         query += f" AND date >= '{start_date}'"
@@ -67,7 +78,16 @@ def get_stock_ohlcv(tickers: List[str], start_date: Optional[str] = None,
     
     query += " ORDER BY ticker, date"
     
-    return db.query(query)
+    if limit:
+        query += f" LIMIT {limit}"
+    
+    df = db.query(query)
+    
+    # If single ticker, set date as index
+    if ticker and not df.empty:
+        df = df.set_index('date')
+    
+    return df
 
 
 def get_options_data(ticker: str, start_date: Optional[str] = None,
