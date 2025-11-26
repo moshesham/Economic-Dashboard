@@ -71,7 +71,7 @@ jobs:
         git push
     
     - name: Upload cache as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: economic-data-cache-${{ github.run_number }}
         path: |
