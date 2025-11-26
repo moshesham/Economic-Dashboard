@@ -562,6 +562,97 @@ def create_google_trends_table():
     db.execute("CREATE INDEX IF NOT EXISTS idx_trends_date ON google_trends(date)")
 
 
+# =============================================================================
+# ICI ETF Flows Tables
+# =============================================================================
+
+def create_ici_etf_flows_table():
+    """Create table for ICI ETF flows data from ici.org"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS ici_etf_flows (
+            date DATE NOT NULL,
+            fund_category VARCHAR NOT NULL,
+            net_new_cash_flow DOUBLE,
+            net_issuance DOUBLE,
+            redemptions DOUBLE,
+            reinvested_dividends DOUBLE,
+            total_net_assets DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (date, fund_category)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_ici_etf_date ON ici_etf_flows(date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_ici_etf_category ON ici_etf_flows(fund_category)")
+
+
+def create_ici_etf_weekly_flows_table():
+    """Create table for ICI weekly ETF flows data"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS ici_etf_weekly_flows (
+            week_ending DATE NOT NULL,
+            fund_type VARCHAR NOT NULL,
+            estimated_flows DOUBLE,
+            total_net_assets DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (week_ending, fund_type)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_ici_weekly_date ON ici_etf_weekly_flows(week_ending)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_ici_weekly_type ON ici_etf_weekly_flows(fund_type)")
+
+
+# =============================================================================
+# CBOE VIX Historical Data Tables
+# =============================================================================
+
+def create_cboe_vix_history_table():
+    """Create table for CBOE VIX historical data"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS cboe_vix_history (
+            date DATE NOT NULL,
+            open DOUBLE,
+            high DOUBLE,
+            low DOUBLE,
+            close DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (date)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cboe_vix_date ON cboe_vix_history(date)")
+
+
+def create_cboe_vix_term_structure_table():
+    """Create table for CBOE VIX term structure data (VIX futures)"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS cboe_vix_term_structure (
+            date DATE NOT NULL,
+            contract_month VARCHAR NOT NULL,
+            expiration_date DATE,
+            open DOUBLE,
+            high DOUBLE,
+            low DOUBLE,
+            close DOUBLE,
+            settle DOUBLE,
+            change_amount DOUBLE,
+            total_volume BIGINT,
+            efp_volume BIGINT,
+            open_interest BIGINT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (date, contract_month)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cboe_vix_term_date ON cboe_vix_term_structure(date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_cboe_vix_term_contract ON cboe_vix_term_structure(contract_month)")
+
+
 def create_all_tables():
     """Create all database tables"""
     print("Creating database schema...")
@@ -626,6 +717,20 @@ def create_all_tables():
     create_google_trends_table()
     print("✓ Created google_trends table")
     
+    # ICI ETF Flows Tables
+    create_ici_etf_flows_table()
+    print("✓ Created ici_etf_flows table")
+    
+    create_ici_etf_weekly_flows_table()
+    print("✓ Created ici_etf_weekly_flows table")
+    
+    # CBOE VIX Historical Data Tables
+    create_cboe_vix_history_table()
+    print("✓ Created cboe_vix_history table")
+    
+    create_cboe_vix_term_structure_table()
+    print("✓ Created cboe_vix_term_structure table")
+    
     print("\nDatabase schema created successfully!")
 
 
@@ -633,6 +738,10 @@ def drop_all_tables():
     """Drop all tables (use with caution!)"""
     db = get_db_connection()
     tables = [
+        'cboe_vix_term_structure',
+        'cboe_vix_history',
+        'ici_etf_weekly_flows',
+        'ici_etf_flows',
         'google_trends',
         'sentiment_summary',
         'news_sentiment',
