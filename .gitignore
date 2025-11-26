@@ -26,6 +26,8 @@ wheels/
 
 # Data cache and temporary files
 data/cache/
+data/sentiment/
+data/backups/
 *.tmp
 *.temp
 *.pkl
