@@ -494,6 +494,72 @@ def create_sec_13f_holdings_table():
     db.execute("CREATE INDEX IF NOT EXISTS idx_sec_13f_cik ON sec_13f_holdings(cik)")
     db.execute("CREATE INDEX IF NOT EXISTS idx_sec_13f_filing_date ON sec_13f_holdings(filing_date)")
     db.execute("CREATE INDEX IF NOT EXISTS idx_sec_13f_cusip ON sec_13f_holdings(cusip)")
+def create_news_sentiment_table():
+    """Create table for news article sentiment data"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS news_sentiment (
+            id INTEGER PRIMARY KEY,
+            ticker VARCHAR NOT NULL,
+            title VARCHAR,
+            description VARCHAR,
+            source VARCHAR,
+            published_at TIMESTAMP,
+            url VARCHAR,
+            sentiment_score DOUBLE,
+            sentiment_label VARCHAR,  -- 'positive', 'negative', 'neutral'
+            subjectivity DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_news_ticker ON news_sentiment(ticker)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_news_published ON news_sentiment(published_at)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_news_sentiment ON news_sentiment(sentiment_label)")
+
+
+def create_sentiment_summary_table():
+    """Create table for aggregated sentiment summaries"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS sentiment_summary (
+            ticker VARCHAR NOT NULL,
+            analysis_date DATE NOT NULL,
+            article_count INTEGER,
+            avg_sentiment DOUBLE,
+            median_sentiment DOUBLE,
+            positive_count INTEGER,
+            negative_count INTEGER,
+            neutral_count INTEGER,
+            sentiment_trend VARCHAR,  -- 'bullish', 'slightly_bullish', 'neutral', 'slightly_bearish', 'bearish'
+            momentum DOUBLE,
+            confidence DOUBLE,
+            recommendation VARCHAR,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (ticker, analysis_date)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_summary_ticker ON sentiment_summary(ticker)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_summary_date ON sentiment_summary(analysis_date)")
+
+
+def create_google_trends_table():
+    """Create table for Google Trends data"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS google_trends (
+            keyword VARCHAR NOT NULL,
+            date DATE NOT NULL,
+            interest_value DOUBLE,
+            geo VARCHAR DEFAULT 'US',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (keyword, date, geo)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_trends_keyword ON google_trends(keyword)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_trends_date ON google_trends(date)")
 
 
 def create_all_tables():
@@ -551,6 +617,14 @@ def create_all_tables():
     
     create_sec_13f_holdings_table()
     print("✓ Created sec_13f_holdings table")
+    create_news_sentiment_table()
+    print("✓ Created news_sentiment table")
+    
+    create_sentiment_summary_table()
+    print("✓ Created sentiment_summary table")
+    
+    create_google_trends_table()
+    print("✓ Created google_trends table")
     
     print("\nDatabase schema created successfully!")
 
@@ -559,6 +633,9 @@ def drop_all_tables():
     """Drop all tables (use with caution!)"""
     db = get_db_connection()
     tables = [
+        'google_trends',
+        'sentiment_summary',
+        'news_sentiment',
         'feature_drift',
         'data_refresh_log',
         'model_performance',
