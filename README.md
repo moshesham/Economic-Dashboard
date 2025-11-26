@@ -35,62 +35,76 @@ The **Economic Dashboard** is an enterprise-grade analytical platform designed f
 
 ## ✨ Features
 
-### 📊 Core Analytics Modules
+### Homepage - Global Overview
+- **Key Economic Indicators**: Real-time metrics for:
+  - US GDP Growth (Quarterly % Change)
+  - US Inflation (CPI % Change YoY)
+  - US Federal Funds Rate
+  - WTI Crude Oil Price
+  - Gold Price
+- **Interactive World GDP Map**: Visualize global GDP growth patterns
+- **S&P 500 Performance Chart**: 5-year historical trend analysis
+- **API Key Status**: Real-time indicator of authenticated access
 
-<table>
-<tr>
-<td width="50%">
+### Economic Indicators Deep Dive
+- **Multi-Country Comparison**: Compare economic metrics across major economies
+- **Flexible Metric Selection**: Choose from GDP Growth, Inflation (CPI), or Unemployment Rate
+- **Custom Date Ranges**: Filter data for specific time periods
+- **Interactive Visualizations**: Dynamic charts with hover details and tooltips
+- **Summary Statistics**: View latest values and period averages
 
-#### 🏛️ Macroeconomic Dashboard
-- **GDP & Growth Metrics** — Real GDP, GDP components, productivity indices
-- **Inflation Tracking** — CPI, Core CPI, PCE, PPI with YoY comparisons
-- **Employment Analytics** — Unemployment, payrolls, labor force participation
-- **Consumer Insights** — Personal consumption, savings rates, retail sales
+### Financial Markets Deep Dive
+- **Market Indices Analysis**:
+  - Track S&P 500, NASDAQ, FTSE 100, Nikkei 225, and more
+  - Normalized performance comparison
+  - Customizable time periods
+  
+- **US Treasury Yield Curve**:
+  - Historical 10-Year and 2-Year Treasury yields
+  - Yield curve spread analysis with inversion detection
+  - Visual indicators for recession signals
+  
+- **Market Volatility (VIX)**:
+  - 3-year VIX trend analysis
+  - Real-time volatility gauge with color-coded risk levels
+  - Statistical summaries (average, min, max)
 
-</td>
-<td width="50%">
+### 📄 SEC EDGAR Data Explorer (NEW)
+- **Company Financials**: Access XBRL financial statement data via SEC's Company Facts API
+- **SEC Filings Browser**: View and analyze recent 10-K, 10-Q, 8-K, and other filings
+- **Institutional Holdings**: Track Form 13F holdings from institutional investment managers
+- **Financial Statement Data Sets**: Download quarterly FSDS data for bulk analysis
+- **CIK Lookup**: Search companies by ticker symbol or CIK number
+- **Key Metrics Visualization**: Charts for revenue, net income, and other financial trends
 
-#### 📈 Market Intelligence
-- **Global Indices** — S&P 500, NASDAQ, Dow Jones, FTSE, Nikkei, DAX
-- **Sector Heatmaps** — Visual sector performance analysis
-- **Technical Analysis** — Advanced charting with indicators
-- **Correlation Matrix** — Cross-market relationship analysis
+**Available SEC Datasets:**
+- Financial Statement Data Sets (quarterly XBRL data from all filers)
+- Company Facts API (real-time standardized financial data)
+- Form 13F Holdings (institutional investor positions)
+- Fails-to-Deliver Data (settlement failure records)
+- Company Submissions (filing history and metadata)
 
-</td>
-</tr>
-<tr>
-<td width="50%">
+### 🔑 API Key Management (NEW)
+- **Secure Storage**: Encrypted API key storage using industry-standard encryption
+- **Multiple Services**: Support for FRED, Yahoo Finance, Alpha Vantage, Quandl, and more
+- **Visual Management**: User-friendly interface for adding, updating, and removing keys
+- **Status Indicators**: Real-time display of configured services
+- **Higher Limits**: Automatic use of API keys for better rate limits and reliability
 
-#### 🏠 Housing & Consumer
-- **Housing Starts** — New construction activity tracking
-- **Mortgage Rates** — 30-year fixed rate trends
-- **Consumer Confidence** — Sentiment indicators
-- **Personal Savings** — Savings rate monitoring
+### 🔄 Automated Data Refresh (NEW)
+- **Daily Updates**: Automatic data refresh at 6 AM UTC via GitHub Actions or Apache Airflow
+- **Centralized Caching**: All economic data stored in unified cache for fast access
+- **Backup System**: CSV backups created daily for inspection and recovery
+- **Manual Triggers**: Run data refresh on-demand when needed
+- **Quality Validation**: Automated checks ensure data freshness and completeness
 
-</td>
-<td width="50%">
+For detailed setup instructions, see [docs/AUTOMATED_DATA_REFRESH.md](docs/AUTOMATED_DATA_REFRESH.md)
 
-#### 💹 Interest Rates & Treasury
-- **Federal Funds Rate** — Fed policy tracking
-- **Treasury Yields** — 2Y, 5Y, 10Y, 30Y curves
-- **Yield Curve Analysis** — Inversion detection
-- **Breakeven Inflation** — Market expectations
+## 🚀 Live Demo
 
-</td>
-</tr>
-</table>
+*Coming soon: Streamlit Cloud deployment link*
 
-### 🛠️ Platform Capabilities
-
-- **🔑 Secure API Management** — Encrypted storage for FRED, Yahoo Finance, and more
-- **🔄 Automated Data Refresh** — Daily updates via GitHub Actions or Apache Airflow
-- **📊 Interactive Visualizations** — Powered by Plotly with zoom, pan, and hover details
-- **💾 Smart Caching** — 24-hour intelligent cache for optimal performance
-- **🌐 Offline Mode** — Full functionality with sample data for development
-
----
-
-## 🚀 Quick Start
+## 🛠️ Installation & Setup
 
 ### Prerequisites
 
@@ -253,9 +267,11 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ## 🙏 Acknowledgments
 
-<div align="center">
-
-**Powered by industry-leading technologies**
+- Federal Reserve Bank of St. Louis for FRED API
+- Yahoo Finance for market data API
+- U.S. Securities and Exchange Commission (SEC) for EDGAR API and financial datasets
+- Streamlit team for the amazing framework
+- Plotly for powerful visualization tools
 
 [![FRED](https://img.shields.io/badge/Federal_Reserve-FRED_API-00529B?style=flat-square)](https://fred.stlouisfed.org/)
 [![Yahoo Finance](https://img.shields.io/badge/Yahoo-Finance_API-6001D2?style=flat-square)](https://finance.yahoo.com/)
