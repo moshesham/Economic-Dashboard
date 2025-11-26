@@ -28,9 +28,11 @@ wheels/
 data/cache/
 data/sentiment/
 data/backups/
+data/duckdb/
 *.tmp
 *.temp
 *.pkl
+*.duckdb
 
 # Credentials and API keys (IMPORTANT: Never commit these!)
 data/credentials/

@@ -27,6 +27,10 @@ on:
       - 'modules/cpi_basket_config.py'
       - '.github/workflows/cpi-data-refresh.yml'
 
+# Explicit permissions for security
+permissions:
+  contents: write  # Required to push data changes back to the repository
+
 jobs:
   refresh-cpi-data:
     runs-on: ubuntu-latest
