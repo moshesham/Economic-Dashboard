@@ -502,20 +502,25 @@ def get_sec_company_facts(cik: str, concepts: Optional[List[str]] = None,
     """
     db = get_db_connection()
     
-    query = f"SELECT * FROM sec_company_facts WHERE cik = '{cik}'"
+    # Build parameterized query to prevent SQL injection
+    params = [cik]
+    query = "SELECT * FROM sec_company_facts WHERE cik = ?"
     
     if concepts:
-        concepts_list = "','".join(concepts)
-        query += f" AND concept IN ('{concepts_list}')"
+        placeholders = ','.join(['?' for _ in concepts])
+        query += f" AND concept IN ({placeholders})"
+        params.extend(concepts)
     
     if start_date:
-        query += f" AND end_date >= '{start_date}'"
+        query += " AND end_date >= ?"
+        params.append(start_date)
     if end_date:
-        query += f" AND end_date <= '{end_date}'"
+        query += " AND end_date <= ?"
+        params.append(end_date)
     
     query += " ORDER BY end_date DESC, concept"
     
-    return db.query(query)
+    return db.query(query, tuple(params))
 
 
 def get_sec_filings(cik: Optional[str] = None, 
@@ -538,22 +543,31 @@ def get_sec_filings(cik: Optional[str] = None,
     """
     db = get_db_connection()
     
+    # Build parameterized query to prevent SQL injection
+    params = []
     query = "SELECT * FROM sec_filings WHERE 1=1"
     
     if cik:
-        query += f" AND cik = '{cik}'"
+        query += " AND cik = ?"
+        params.append(cik)
     
     if form_types:
-        forms_list = "','".join(form_types)
-        query += f" AND form IN ('{forms_list}')"
+        placeholders = ','.join(['?' for _ in form_types])
+        query += f" AND form IN ({placeholders})"
+        params.extend(form_types)
     
     if start_date:
-        query += f" AND filing_date >= '{start_date}'"
+        query += " AND filing_date >= ?"
+        params.append(start_date)
     if end_date:
-        query += f" AND filing_date <= '{end_date}'"
+        query += " AND filing_date <= ?"
+        params.append(end_date)
     
-    query += f" ORDER BY filing_date DESC LIMIT {limit}"
+    # Limit is safe as it's an integer
+    query += f" ORDER BY filing_date DESC LIMIT {int(limit)}"
     
+    if params:
+        return db.query(query, tuple(params))
     return db.query(query)
 
 
@@ -631,24 +645,33 @@ def get_sec_fails_to_deliver(symbol: Optional[str] = None,
     """
     db = get_db_connection()
     
+    # Build parameterized query to prevent SQL injection
+    params = []
     query = "SELECT * FROM sec_fails_to_deliver WHERE 1=1"
     
     if symbol:
-        query += f" AND symbol = '{symbol.upper()}'"
+        query += " AND symbol = ?"
+        params.append(symbol.upper())
     
     if cusip:
-        query += f" AND cusip = '{cusip}'"
+        query += " AND cusip = ?"
+        params.append(cusip)
     
     if start_date:
-        query += f" AND settlement_date >= '{start_date}'"
+        query += " AND settlement_date >= ?"
+        params.append(start_date)
     if end_date:
-        query += f" AND settlement_date <= '{end_date}'"
+        query += " AND settlement_date <= ?"
+        params.append(end_date)
     
     if min_quantity:
-        query += f" AND quantity >= {min_quantity}"
+        # Integer is safe to embed directly
+        query += f" AND quantity >= {int(min_quantity)}"
     
     query += " ORDER BY settlement_date DESC, quantity DESC"
     
+    if params:
+        return db.query(query, tuple(params))
     return db.query(query)
 
 
@@ -670,22 +693,30 @@ def get_sec_13f_holdings(cik: Optional[str] = None,
     """
     db = get_db_connection()
     
+    # Build parameterized query to prevent SQL injection
+    params = []
     query = "SELECT * FROM sec_13f_holdings WHERE 1=1"
     
     if cik:
-        query += f" AND cik = '{cik}'"
+        query += " AND cik = ?"
+        params.append(cik)
     
     if cusip:
-        query += f" AND cusip = '{cusip}'"
+        query += " AND cusip = ?"
+        params.append(cusip)
     
     if filing_date:
-        query += f" AND filing_date = '{filing_date}'"
+        query += " AND filing_date = ?"
+        params.append(filing_date)
     
     if min_value:
-        query += f" AND value_usd >= {min_value}"
+        # Integer is safe to embed directly
+        query += f" AND value_usd >= {int(min_value)}"
     
     query += " ORDER BY filing_date DESC, value_usd DESC"
     
+    if params:
+        return db.query(query, tuple(params))
     return db.query(query)
 
 

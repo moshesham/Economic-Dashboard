@@ -65,20 +65,6 @@ with st.sidebar:
         ["Ticker Symbol", "Company CIK", "Browse Companies"]
     )
     
-    if search_method == "Ticker Symbol":
-        ticker_input = st.text_input(
-            "Enter Ticker Symbol:",
-            placeholder="e.g., AAPL, MSFT, GOOGL"
-        ).upper().strip()
-    elif search_method == "Company CIK":
-        cik_input = st.text_input(
-            "Enter CIK Number:",
-            placeholder="e.g., 0000320193"
-        ).strip()
-    else:
-        # Browse companies
-        st.info("Loading company list...")
-    
     st.divider()
     
     st.header("📊 Data Options")
@@ -104,17 +90,33 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # Determine CIK based on search method
 cik = None
 company_name = None
+ticker_input = None
+cik_input = None
 
-if search_method == "Ticker Symbol" and 'ticker_input' in dir() and ticker_input:
-    with st.spinner(f"Looking up {ticker_input}..."):
-        cik = lookup_cik(ticker_input)
-        if cik:
-            st.sidebar.success(f"Found CIK: {cik}")
-        else:
-            st.sidebar.warning(f"Could not find CIK for {ticker_input}")
+if search_method == "Ticker Symbol":
+    ticker_input = st.sidebar.text_input(
+        "Enter Ticker Symbol:",
+        placeholder="e.g., AAPL, MSFT, GOOGL",
+        key="ticker_input_field"
+    ).upper().strip()
+    
+    if ticker_input:
+        with st.spinner(f"Looking up {ticker_input}..."):
+            cik = lookup_cik(ticker_input)
+            if cik:
+                st.sidebar.success(f"Found CIK: {cik}")
+            else:
+                st.sidebar.warning(f"Could not find CIK for {ticker_input}")
 
-elif search_method == "Company CIK" and 'cik_input' in dir() and cik_input:
-    cik = cik_input.zfill(10)
+elif search_method == "Company CIK":
+    cik_input = st.sidebar.text_input(
+        "Enter CIK Number:",
+        placeholder="e.g., 0000320193",
+        key="cik_input_field"
+    ).strip()
+    
+    if cik_input:
+        cik = cik_input.zfill(10)
 
 elif search_method == "Browse Companies":
     # Load company tickers for selection

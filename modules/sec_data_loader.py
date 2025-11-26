@@ -544,10 +544,10 @@ def lookup_cik(ticker: str) -> Optional[str]:
     # First try direct lookup (some tickers work directly)
     try:
         response = _download_with_retry(url, SEC_DATA_HEADERS)
-        if response and response.status_code == 200:
+        if response:
             data = response.json()
             return str(data.get('cik', '')).zfill(10)
-    except:
+    except Exception:
         pass
     
     # Try the company tickers JSON file
