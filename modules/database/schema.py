@@ -661,179 +661,6 @@ def create_google_trends_table():
     db.execute("CREATE INDEX IF NOT EXISTS idx_trends_date ON google_trends(date)")
 
 
-def create_financial_health_scores_table():
-    """Create table for financial health scoring (Piotroski, Altman Z-Score)"""
-    db = get_db_connection()
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS financial_health_scores (
-            ticker VARCHAR NOT NULL,
-            date DATE NOT NULL,
-            cik VARCHAR,
-            piotroski_score INTEGER,
-            altman_z_score DOUBLE,
-            composite_score DOUBLE,
-            health_rating VARCHAR,
-            profitability_subscore INTEGER,
-            leverage_subscore INTEGER,
-            efficiency_subscore INTEGER,
-            risk_zone VARCHAR,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (ticker, date)
-        )
-    """)
-    
-    db.execute("CREATE INDEX IF NOT EXISTS idx_health_ticker ON financial_health_scores(ticker)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_health_date ON financial_health_scores(date)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_health_rating ON financial_health_scores(health_rating)")
-
-
-def create_sector_rotation_analysis_table():
-    """Create table for sector rotation patterns"""
-    db = get_db_connection()
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS sector_rotation_analysis (
-            date DATE NOT NULL PRIMARY KEY,
-            rotation_pattern VARCHAR,
-            confidence VARCHAR,
-            offensive_avg_rs DOUBLE,
-            defensive_avg_rs DOUBLE,
-            cyclical_avg_rs DOUBLE,
-            sector_breadth DOUBLE,
-            concentration DOUBLE,
-            leading_sector_1 VARCHAR,
-            leading_sector_2 VARCHAR,
-            leading_sector_3 VARCHAR,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    db.execute("CREATE INDEX IF NOT EXISTS idx_rotation_date ON sector_rotation_analysis(date)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_rotation_pattern ON sector_rotation_analysis(rotation_pattern)")
-
-
-def create_sector_relative_strength_table():
-    """Create table for individual sector relative strength metrics"""
-    db = get_db_connection()
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS sector_relative_strength (
-            sector VARCHAR NOT NULL,
-            ticker VARCHAR NOT NULL,
-            date DATE NOT NULL,
-            sector_return DOUBLE,
-            spy_return DOUBLE,
-            relative_strength DOUBLE,
-            momentum DOUBLE,
-            trend VARCHAR,
-            volatility DOUBLE,
-            classification VARCHAR,
-            rs_rank INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (sector, date)
-        )
-    """)
-    
-    db.execute("CREATE INDEX IF NOT EXISTS idx_sector_rs_date ON sector_relative_strength(date)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_sector_rs_ticker ON sector_relative_strength(ticker)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_sector_rs_classification ON sector_relative_strength(classification)")
-
-
-def create_insider_transactions_table():
-    """Create table for SEC Form 4 insider trading transactions"""
-    db = get_db_connection()
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS insider_transactions (
-            ticker VARCHAR NOT NULL,
-            cik VARCHAR NOT NULL,
-            transaction_date DATE NOT NULL,
-            filing_date DATE NOT NULL,
-            insider_name VARCHAR,
-            insider_title VARCHAR,
-            is_director BOOLEAN,
-            is_officer BOOLEAN,
-            transaction_code VARCHAR,
-            transaction_type VARCHAR,
-            shares DOUBLE,
-            price_per_share DOUBLE,
-            transaction_value DOUBLE,
-            acquired_disposed VARCHAR,
-            shares_owned_after DOUBLE,
-            security_type VARCHAR,
-            accession_number VARCHAR,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (ticker, transaction_date, insider_name, transaction_code, shares)
-        )
-    """)
-    
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_ticker ON insider_transactions(ticker)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_cik ON insider_transactions(cik)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_trans_date ON insider_transactions(transaction_date)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_filing_date ON insider_transactions(filing_date)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_code ON insider_transactions(transaction_code)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_name ON insider_transactions(insider_name)")
-
-
-def create_insider_sentiment_scores_table():
-    """Create table for aggregated insider sentiment analysis"""
-    db = get_db_connection()
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS insider_sentiment_scores (
-            ticker VARCHAR NOT NULL,
-            date DATE NOT NULL,
-            sentiment_score DOUBLE,
-            signal VARCHAR,
-            buy_value DOUBLE,
-            sell_value DOUBLE,
-            net_value DOUBLE,
-            num_buyers INTEGER,
-            num_sellers INTEGER,
-            total_transactions INTEGER,
-            confidence VARCHAR,
-            is_unusual BOOLEAN,
-            volume_ratio DOUBLE,
-            value_ratio DOUBLE,
-            alerts TEXT,
-            lookback_days INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (ticker, date, lookback_days)
-        )
-    """)
-    
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_sent_ticker ON insider_sentiment_scores(ticker)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_sent_date ON insider_sentiment_scores(date)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_sent_signal ON insider_sentiment_scores(signal)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_sent_unusual ON insider_sentiment_scores(is_unusual)")
-
-
-def create_insider_backtest_results_table():
-    """Create table for insider trading signal backtest results"""
-    db = get_db_connection()
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS insider_backtest_results (
-            ticker VARCHAR NOT NULL,
-            backtest_date DATE NOT NULL,
-            signal_threshold DOUBLE,
-            holding_period_days INTEGER,
-            total_signals INTEGER,
-            valid_trades INTEGER,
-            win_rate DOUBLE,
-            avg_return DOUBLE,
-            median_return DOUBLE,
-            best_return DOUBLE,
-            worst_return DOUBLE,
-            benchmark_return DOUBLE,
-            annualized_signal_return DOUBLE,
-            annualized_benchmark DOUBLE,
-            alpha DOUBLE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (ticker, backtest_date, signal_threshold, holding_period_days)
-        )
-    """)
-    
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_bt_ticker ON insider_backtest_results(ticker)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_bt_date ON insider_backtest_results(backtest_date)")
-    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_bt_alpha ON insider_backtest_results(alpha)")
-
-
 def create_all_tables():
     """Create all database tables"""
     print("Creating database schema...")
@@ -911,26 +738,6 @@ def create_all_tables():
     create_google_trends_table()
     print("✓ Created google_trends table")
     
-    # Financial Health & Sector Rotation Tables
-    create_financial_health_scores_table()
-    print("✓ Created financial_health_scores table")
-    
-    create_sector_rotation_analysis_table()
-    print("✓ Created sector_rotation_analysis table")
-    
-    create_sector_relative_strength_table()
-    print("✓ Created sector_relative_strength table")
-    
-    # Insider Trading Tables
-    create_insider_transactions_table()
-    print("✓ Created insider_transactions table")
-    
-    create_insider_sentiment_scores_table()
-    print("✓ Created insider_sentiment_scores table")
-    
-    create_insider_backtest_results_table()
-    print("✓ Created insider_backtest_results table")
-    
     print("\nDatabase schema created successfully!")
 
 
@@ -938,6 +745,10 @@ def drop_all_tables():
     """Drop all tables (use with caution!)"""
     db = get_db_connection()
     tables = [
+        'cboe_vix_term_structure',
+        'cboe_vix_history',
+        'ici_etf_weekly_flows',
+        'ici_etf_flows',
         'google_trends',
         'sentiment_summary',
         'news_sentiment',

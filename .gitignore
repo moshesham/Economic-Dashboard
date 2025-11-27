@@ -28,6 +28,8 @@ wheels/
 data/cache/
 data/sentiment/
 data/backups/
+data/duckdb/*.duckdb
+data/duckdb/temp/
 *.tmp
 *.temp
 *.pkl

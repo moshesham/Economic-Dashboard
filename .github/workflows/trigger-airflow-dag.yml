@@ -1,9 +1,11 @@
-name: Trigger Airflow DAG
+# DISABLED - Airflow triggers temporarily disabled
+# To re-enable, remove the '# DISABLED' prefix
+name: Trigger Airflow DAG (DISABLED)
 
 on:
-  # Run daily at 6 AM UTC
-  schedule:
-    - cron: '0 6 * * *'
+  # Disabled - uncomment to re-enable
+  # schedule:
+  #   - cron: '0 6 * * *'
   
   # Allow manual trigger
   workflow_dispatch:

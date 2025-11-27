@@ -838,3 +838,271 @@ def get_sec_data_freshness() -> pd.DataFrame:
     """
     
     return db.query(query)
+
+
+# ============================================================================
+# ICI ETF FLOWS QUERIES
+# ============================================================================
+
+def get_ici_weekly_etf_flows(fund_type: Optional[str] = None,
+                              start_date: Optional[str] = None,
+                              end_date: Optional[str] = None) -> pd.DataFrame:
+    """
+    Retrieve ICI weekly ETF flows data
+    
+    Args:
+        fund_type: Optional fund type to filter by
+        start_date: Optional start date (YYYY-MM-DD)
+        end_date: Optional end date (YYYY-MM-DD)
+        
+    Returns:
+        DataFrame with weekly ETF flow data
+    """
+    db = get_db_connection()
+    
+    # Build parameterized query
+    params = []
+    query = "SELECT * FROM ici_etf_weekly_flows WHERE 1=1"
+    
+    if fund_type:
+        query += " AND fund_type = ?"
+        params.append(fund_type)
+    
+    if start_date:
+        query += " AND week_ending >= ?"
+        params.append(start_date)
+    
+    if end_date:
+        query += " AND week_ending <= ?"
+        params.append(end_date)
+    
+    query += " ORDER BY week_ending DESC"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def get_ici_monthly_etf_flows(fund_category: Optional[str] = None,
+                               start_date: Optional[str] = None,
+                               end_date: Optional[str] = None) -> pd.DataFrame:
+    """
+    Retrieve ICI monthly ETF flows data
+    
+    Args:
+        fund_category: Optional fund category to filter by
+        start_date: Optional start date (YYYY-MM-DD)
+        end_date: Optional end date (YYYY-MM-DD)
+        
+    Returns:
+        DataFrame with monthly ETF flow data
+    """
+    db = get_db_connection()
+    
+    # Build parameterized query
+    params = []
+    query = "SELECT * FROM ici_etf_flows WHERE 1=1"
+    
+    if fund_category:
+        query += " AND fund_category = ?"
+        params.append(fund_category)
+    
+    if start_date:
+        query += " AND date >= ?"
+        params.append(start_date)
+    
+    if end_date:
+        query += " AND date <= ?"
+        params.append(end_date)
+    
+    query += " ORDER BY date DESC"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def insert_ici_weekly_flows(df: pd.DataFrame) -> int:
+    """
+    Insert ICI weekly ETF flows data into database
+    
+    Args:
+        df: DataFrame with weekly flows data
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    df['week_ending'] = pd.to_datetime(df['week_ending'])
+    
+    db.insert_df(df, 'ici_etf_weekly_flows', if_exists='append')
+    
+    return len(df)
+
+
+def insert_ici_monthly_flows(df: pd.DataFrame) -> int:
+    """
+    Insert ICI monthly ETF flows data into database
+    
+    Args:
+        df: DataFrame with monthly flows data
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'])
+    
+    db.insert_df(df, 'ici_etf_flows', if_exists='append')
+    
+    return len(df)
+
+
+# ============================================================================
+# CBOE VIX QUERIES
+# ============================================================================
+
+def get_cboe_vix_history(start_date: Optional[str] = None,
+                          end_date: Optional[str] = None) -> pd.DataFrame:
+    """
+    Retrieve CBOE VIX historical data
+    
+    Args:
+        start_date: Optional start date (YYYY-MM-DD)
+        end_date: Optional end date (YYYY-MM-DD)
+        
+    Returns:
+        DataFrame with VIX OHLC data
+    """
+    db = get_db_connection()
+    
+    # Build parameterized query
+    params = []
+    query = "SELECT * FROM cboe_vix_history WHERE 1=1"
+    
+    if start_date:
+        query += " AND date >= ?"
+        params.append(start_date)
+    
+    if end_date:
+        query += " AND date <= ?"
+        params.append(end_date)
+    
+    query += " ORDER BY date"
+    
+    if params:
+        return db.query(query, tuple(params))
+    return db.query(query)
+
+
+def get_latest_vix_data(days: int = 30) -> pd.DataFrame:
+    """
+    Get the most recent VIX data
+    
+    Args:
+        days: Number of days to retrieve
+        
+    Returns:
+        DataFrame with recent VIX data
+    """
+    db = get_db_connection()
+    
+    # Use integer cast for safety, as LIMIT doesn't support parameterized queries in DuckDB
+    safe_days = int(days)
+    query = f"""
+        SELECT * FROM cboe_vix_history 
+        ORDER BY date DESC 
+        LIMIT {safe_days}
+    """
+    
+    return db.query(query)
+
+
+def insert_cboe_vix_data(df: pd.DataFrame) -> int:
+    """
+    Insert CBOE VIX data into database
+    
+    Args:
+        df: DataFrame with VIX OHLC data
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'])
+    
+    # Ensure numeric columns
+    for col in ['open', 'high', 'low', 'close']:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    db.insert_df(df, 'cboe_vix_history', if_exists='append')
+    
+    return len(df)
+
+
+def insert_cboe_vix_term_structure(df: pd.DataFrame) -> int:
+    """
+    Insert CBOE VIX term structure data into database
+    
+    Args:
+        df: DataFrame with VIX term structure data
+        
+    Returns:
+        Number of records inserted
+    """
+    db = get_db_connection()
+    
+    df = df.copy()
+    df['date'] = pd.to_datetime(df['date'])
+    if 'expiration_date' in df.columns:
+        df['expiration_date'] = pd.to_datetime(df['expiration_date'])
+    
+    db.insert_df(df, 'cboe_vix_term_structure', if_exists='append')
+    
+    return len(df)
+
+
+def get_extended_data_freshness() -> pd.DataFrame:
+    """
+    Get the latest date for all data sources including ICI and CBOE
+    
+    Returns:
+        DataFrame showing data freshness by source
+    """
+    db = get_db_connection()
+    
+    query = """
+        SELECT 'fred_data' as source, MAX(date) as latest_date, COUNT(*) as total_records
+        FROM fred_data
+        UNION ALL
+        SELECT 'yfinance_ohlcv', MAX(date), COUNT(*)
+        FROM yfinance_ohlcv
+        UNION ALL
+        SELECT 'options_data', MAX(date), COUNT(*)
+        FROM options_data
+        UNION ALL
+        SELECT 'technical_features', MAX(date), COUNT(*)
+        FROM technical_features
+        UNION ALL
+        SELECT 'ml_predictions', MAX(prediction_date), COUNT(*)
+        FROM ml_predictions
+        UNION ALL
+        SELECT 'ici_etf_weekly_flows', MAX(week_ending), COUNT(*)
+        FROM ici_etf_weekly_flows
+        UNION ALL
+        SELECT 'ici_etf_flows', MAX(date), COUNT(*)
+        FROM ici_etf_flows
+        UNION ALL
+        SELECT 'cboe_vix_history', MAX(date), COUNT(*)
+        FROM cboe_vix_history
+        ORDER BY source
+    """
+    
+    return db.query(query)

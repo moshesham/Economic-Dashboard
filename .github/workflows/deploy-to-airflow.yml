@@ -1,10 +1,13 @@
-name: Deploy DAGs to Airflow
+# DISABLED - Airflow deployment temporarily disabled
+# To re-enable, remove the '# DISABLED' prefix
+name: Deploy DAGs to Airflow (DISABLED)
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'airflow/dags/**'
+  # Disabled - uncomment to re-enable
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'airflow/dags/**'
   
   workflow_dispatch:
 

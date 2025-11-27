@@ -37,6 +37,10 @@ jobs:
         pip install -r requirements.txt
         pip install requests[socks] PySocks  # For proxy support
     
+    - name: Verify dependencies
+      run: |
+        python -c "import pandas; import yfinance; import pandas_datareader; print('Dependencies OK')"
+    
     - name: Create cache directory
       run: |
         mkdir -p data/cache
