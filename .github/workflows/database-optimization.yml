@@ -2,12 +2,10 @@ name: Database Optimization & Snapshot
 
 on:
   # Run optimization weekly on Sunday at 2 AM UTC
-  schedule:
-    - cron: '0 2 * * 0'
-  
   # Run snapshot daily at 11:59 PM UTC
   schedule:
-    - cron: '59 23 * * *'
+    - cron: '0 2 * * 0'   # Weekly cleanup/compaction
+    - cron: '59 23 * * *' # Daily snapshot
   
   # Allow manual trigger
   workflow_dispatch:

@@ -37,20 +37,13 @@ class DatabaseConnection:
         
         self._connection = duckdb.connect(str(db_path))
         
-        # Configure DuckDB for optimal performance and compression
+        # Configure DuckDB for optimal performance
         self._connection.execute("SET threads=4")
         self._connection.execute("SET memory_limit='2GB'")
         self._connection.execute(f"SET temp_directory='{temp_dir}'")
         
-        # Enable compression (ZSTD provides best compression ratio)
-        self._connection.execute("SET default_compression='zstd'")
-        
-        # Increase block size for better compression (default is 262144)
-        self._connection.execute("SET default_block_size=524288")
-        
-        # Enable statistics for query optimization
-        self._connection.execute("SET enable_optimizer=true")
-        self._connection.execute("SET enable_profiling=false")  # Disable unless debugging
+        # Note: DuckDB automatically optimizes queries and uses compression
+        # Additional optimizations are applied at export time via COPY TO PARQUET
         
     @property
     def connection(self) -> duckdb.DuckDBPyConnection:
