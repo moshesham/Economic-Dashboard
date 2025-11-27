@@ -34,6 +34,18 @@ data/duckdb/temp/
 *.temp
 *.pkl
 
+# DuckDB database files (exclude from Git - use LFS for archives only)
+data/duckdb/economic_dashboard.duckdb
+data/duckdb/economic_dashboard.duckdb.wal
+data/duckdb/temp/
+
+# DuckDB daily snapshots (use GitHub Artifacts instead)
+data/duckdb/snapshots/
+
+# DuckDB monthly snapshots and archives (TRACKED via Git LFS)
+!data/duckdb/monthly/
+!data/duckdb/archives/
+
 # Credentials and API keys (IMPORTANT: Never commit these!)
 data/credentials/
 .credentials

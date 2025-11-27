@@ -1,0 +1,249 @@
+name: Database Optimization & Snapshot
+
+on:
+  # Run optimization weekly on Sunday at 2 AM UTC
+  schedule:
+    - cron: '0 2 * * 0'
+  
+  # Run snapshot daily at 11:59 PM UTC
+  schedule:
+    - cron: '59 23 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Operation to perform'
+        required: true
+        default: 'snapshot'
+        type: choice
+        options:
+          - snapshot
+          - cleanup
+          - compact
+          - all
+
+permissions:
+  contents: write
+
+jobs:
+  # JOB 1: Create optimized snapshot (runs daily)
+  create-snapshot:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '59 23 * * *' || github.event.inputs.operation == 'snapshot' || github.event.inputs.operation == 'all'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        lfs: true
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Pull latest database
+      run: |
+        git lfs pull
+    
+    - name: Create partitioned snapshot
+      run: |
+        python scripts/create_database_snapshot_optimized.py --type partitioned --cleanup --retention-days 14
+    
+    - name: Check database size
+      id: db_size
+      run: |
+        if [ -f data/duckdb/economic_dashboard.duckdb ]; then
+          DB_SIZE=$(du -h data/duckdb/economic_dashboard.duckdb | cut -f1)
+          echo "DB_SIZE=$DB_SIZE" >> $GITHUB_OUTPUT
+          echo "Database size: $DB_SIZE"
+        fi
+        
+        if [ -d data/duckdb/archives ]; then
+          ARCHIVE_SIZE=$(du -sh data/duckdb/archives | cut -f1)
+          echo "ARCHIVE_SIZE=$ARCHIVE_SIZE" >> $GITHUB_OUTPUT
+          echo "Archive size: $ARCHIVE_SIZE"
+        fi
+    
+    - name: Upload snapshot artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: database-snapshot-${{ github.run_number }}
+        path: |
+          data/duckdb/snapshots/*.duckdb
+          data/duckdb/archives/*.parquet
+        retention-days: 30
+        compression-level: 9
+    
+    - name: Create monthly snapshot (on last day of month)
+      run: |
+        DAY_OF_MONTH=$(date +'%d')
+        LAST_DAY=$(date -d "$(date +'%Y-%m-01') +1 month -1 day" +'%d')
+        
+        if [ "$DAY_OF_MONTH" = "$LAST_DAY" ]; then
+          echo "Last day of month - creating monthly snapshot"
+          python scripts/create_database_snapshot_optimized.py --type monthly
+          
+          # Commit monthly Parquet archives to Git LFS
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git add data/duckdb/archives/*.parquet
+          git add data/duckdb/monthly/*.duckdb
+          
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: monthly database archive $(date +'%Y-%m')"
+            git push
+          fi
+        fi
+    
+    - name: Create summary
+      if: always()
+      run: |
+        echo "### Snapshot Summary 💾" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Date:** $(date +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Database Size:** ${{ steps.db_size.outputs.DB_SIZE }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Archive Size:** ${{ steps.db_size.outputs.ARCHIVE_SIZE }}" >> $GITHUB_STEP_SUMMARY
+
+  # JOB 2: Data cleanup (runs weekly on Sunday)
+  data-cleanup:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 2 * * 0' || github.event.inputs.operation == 'cleanup' || github.event.inputs.operation == 'all'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        lfs: true
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Pull latest database
+      run: |
+        git lfs pull
+    
+    - name: Initialize retention policies (first run)
+      run: |
+        python scripts/cleanup_old_data.py --init
+    
+    - name: Run data cleanup
+      run: |
+        python scripts/cleanup_old_data.py
+    
+    - name: Check database size after cleanup
+      id: cleanup_size
+      run: |
+        if [ -f data/duckdb/economic_dashboard.duckdb ]; then
+          DB_SIZE=$(du -h data/duckdb/economic_dashboard.duckdb | cut -f1)
+          echo "DB_SIZE=$DB_SIZE" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Upload archive artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: data-archives-${{ github.run_number }}
+        path: data/duckdb/archives/*.parquet
+        retention-days: 90
+    
+    - name: Create summary
+      if: always()
+      run: |
+        echo "### Data Cleanup Summary 🧹" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Date:** $(date +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Database Size After Cleanup:** ${{ steps.cleanup_size.outputs.DB_SIZE }}" >> $GITHUB_STEP_SUMMARY
+
+  # JOB 3: Database compaction (runs weekly on Sunday after cleanup)
+  compact-database:
+    runs-on: ubuntu-latest
+    needs: data-cleanup
+    if: github.event.schedule == '0 2 * * 0' || github.event.inputs.operation == 'compact' || github.event.inputs.operation == 'all'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        lfs: true
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Pull latest database
+      run: |
+        git lfs pull
+    
+    - name: Get size before compaction
+      id: size_before
+      run: |
+        if [ -f data/duckdb/economic_dashboard.duckdb ]; then
+          SIZE_BEFORE=$(stat -f%z data/duckdb/economic_dashboard.duckdb 2>/dev/null || stat -c%s data/duckdb/economic_dashboard.duckdb)
+          echo "SIZE_BEFORE=$SIZE_BEFORE" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Run database compaction
+      run: |
+        python scripts/compact_database.py --deduplicate
+    
+    - name: Get size after compaction
+      id: size_after
+      run: |
+        if [ -f data/duckdb/economic_dashboard.duckdb ]; then
+          SIZE_AFTER=$(stat -f%z data/duckdb/economic_dashboard.duckdb 2>/dev/null || stat -c%s data/duckdb/economic_dashboard.duckdb)
+          echo "SIZE_AFTER=$SIZE_AFTER" >> $GITHUB_OUTPUT
+          
+          SIZE_BEFORE=${{ steps.size_before.outputs.SIZE_BEFORE }}
+          SAVED=$((SIZE_BEFORE - SIZE_AFTER))
+          SAVED_MB=$((SAVED / 1024 / 1024))
+          
+          echo "SAVED_MB=$SAVED_MB" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create summary
+      if: always()
+      run: |
+        echo "### Database Compaction Summary 📦" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Date:** $(date +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        
+        SIZE_BEFORE=${{ steps.size_before.outputs.SIZE_BEFORE }}
+        SIZE_AFTER=${{ steps.size_after.outputs.SIZE_AFTER }}
+        
+        if [ -n "$SIZE_BEFORE" ] && [ -n "$SIZE_AFTER" ]; then
+          SIZE_BEFORE_MB=$((SIZE_BEFORE / 1024 / 1024))
+          SIZE_AFTER_MB=$((SIZE_AFTER / 1024 / 1024))
+          SAVED_MB=${{ steps.size_after.outputs.SAVED_MB }}
+          
+          echo "**Before:** ${SIZE_BEFORE_MB} MB" >> $GITHUB_STEP_SUMMARY
+          echo "**After:** ${SIZE_AFTER_MB} MB" >> $GITHUB_STEP_SUMMARY
+          echo "**Saved:** ${SAVED_MB} MB" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: Alert if database too large
+      if: steps.size_after.outputs.SIZE_AFTER > 2147483648  # 2GB in bytes
+      run: |
+        echo "::warning::Database size exceeds 2GB - consider more aggressive retention policies"

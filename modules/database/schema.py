@@ -290,6 +290,22 @@ def create_data_refresh_log_table():
     db.execute("CREATE INDEX IF NOT EXISTS idx_refresh_status ON data_refresh_log(status)")
 
 
+def create_data_retention_policy_table():
+    """Create table for defining data retention policies"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS data_retention_policy (
+            table_name VARCHAR PRIMARY KEY,
+            retention_days INTEGER NOT NULL,
+            archive_to_parquet BOOLEAN DEFAULT true,
+            partition_column VARCHAR,
+            description VARCHAR,
+            last_cleanup TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+
 def create_feature_drift_table():
     """Create table for monitoring feature drift"""
     db = get_db_connection()
@@ -694,6 +710,9 @@ def create_all_tables():
     
     create_data_refresh_log_table()
     print("✓ Created data_refresh_log table")
+    
+    create_data_retention_policy_table()
+    print("✓ Created data_retention_policy table")
     
     create_feature_drift_table()
     print("✓ Created feature_drift table")
