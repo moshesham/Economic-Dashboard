@@ -8,6 +8,7 @@ from .leverage_metrics import LeverageMetricsCalculator
 from .margin_risk_composite import MarginCallRiskCalculator
 from .financial_health_scorer import FinancialHealthScorer
 from .sector_rotation_detector import SectorRotationDetector
+from .insider_trading_tracker import InsiderTradingTracker
 
 __all__ = [
     'TechnicalIndicatorCalculator',
@@ -17,5 +18,6 @@ __all__ = [
     'LeverageMetricsCalculator',
     'MarginCallRiskCalculator',
     'FinancialHealthScorer',
-    'SectorRotationDetector'
+    'SectorRotationDetector',
+    'InsiderTradingTracker'
 ]

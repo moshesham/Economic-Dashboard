@@ -737,6 +737,103 @@ def create_sector_relative_strength_table():
     db.execute("CREATE INDEX IF NOT EXISTS idx_sector_rs_classification ON sector_relative_strength(classification)")
 
 
+def create_insider_transactions_table():
+    """Create table for SEC Form 4 insider trading transactions"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS insider_transactions (
+            ticker VARCHAR NOT NULL,
+            cik VARCHAR NOT NULL,
+            transaction_date DATE NOT NULL,
+            filing_date DATE NOT NULL,
+            insider_name VARCHAR,
+            insider_title VARCHAR,
+            is_director BOOLEAN,
+            is_officer BOOLEAN,
+            transaction_code VARCHAR,
+            transaction_type VARCHAR,
+            shares DOUBLE,
+            price_per_share DOUBLE,
+            transaction_value DOUBLE,
+            acquired_disposed VARCHAR,
+            shares_owned_after DOUBLE,
+            security_type VARCHAR,
+            accession_number VARCHAR,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (ticker, transaction_date, insider_name, transaction_code, shares)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_ticker ON insider_transactions(ticker)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_cik ON insider_transactions(cik)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_trans_date ON insider_transactions(transaction_date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_filing_date ON insider_transactions(filing_date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_code ON insider_transactions(transaction_code)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_name ON insider_transactions(insider_name)")
+
+
+def create_insider_sentiment_scores_table():
+    """Create table for aggregated insider sentiment analysis"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS insider_sentiment_scores (
+            ticker VARCHAR NOT NULL,
+            date DATE NOT NULL,
+            sentiment_score DOUBLE,
+            signal VARCHAR,
+            buy_value DOUBLE,
+            sell_value DOUBLE,
+            net_value DOUBLE,
+            num_buyers INTEGER,
+            num_sellers INTEGER,
+            total_transactions INTEGER,
+            confidence VARCHAR,
+            is_unusual BOOLEAN,
+            volume_ratio DOUBLE,
+            value_ratio DOUBLE,
+            alerts TEXT,
+            lookback_days INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (ticker, date, lookback_days)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_sent_ticker ON insider_sentiment_scores(ticker)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_sent_date ON insider_sentiment_scores(date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_sent_signal ON insider_sentiment_scores(signal)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_sent_unusual ON insider_sentiment_scores(is_unusual)")
+
+
+def create_insider_backtest_results_table():
+    """Create table for insider trading signal backtest results"""
+    db = get_db_connection()
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS insider_backtest_results (
+            ticker VARCHAR NOT NULL,
+            backtest_date DATE NOT NULL,
+            signal_threshold DOUBLE,
+            holding_period_days INTEGER,
+            total_signals INTEGER,
+            valid_trades INTEGER,
+            win_rate DOUBLE,
+            avg_return DOUBLE,
+            median_return DOUBLE,
+            best_return DOUBLE,
+            worst_return DOUBLE,
+            benchmark_return DOUBLE,
+            annualized_signal_return DOUBLE,
+            annualized_benchmark DOUBLE,
+            alpha DOUBLE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (ticker, backtest_date, signal_threshold, holding_period_days)
+        )
+    """)
+    
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_bt_ticker ON insider_backtest_results(ticker)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_bt_date ON insider_backtest_results(backtest_date)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_insider_bt_alpha ON insider_backtest_results(alpha)")
+
+
 def create_all_tables():
     """Create all database tables"""
     print("Creating database schema...")
@@ -823,6 +920,16 @@ def create_all_tables():
     
     create_sector_relative_strength_table()
     print("✓ Created sector_relative_strength table")
+    
+    # Insider Trading Tables
+    create_insider_transactions_table()
+    print("✓ Created insider_transactions table")
+    
+    create_insider_sentiment_scores_table()
+    print("✓ Created insider_sentiment_scores table")
+    
+    create_insider_backtest_results_table()
+    print("✓ Created insider_backtest_results table")
     
     print("\nDatabase schema created successfully!")
 
