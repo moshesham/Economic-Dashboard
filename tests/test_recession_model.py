@@ -124,9 +124,9 @@ class TestRecessionProbabilityModel:
             assert 0 <= result['signals'][signal_name] <= 1
     
     def test_indicator_weights_sum_to_one(self):
-        """Test that indicator weights sum to approximately 1."""
+        """Test that indicator weights sum to exactly 1."""
         total_weight = sum(INDICATOR_WEIGHTS.values())
-        assert abs(total_weight - 1.0) < 0.01
+        assert total_weight == 1.0, f"Weights sum to {total_weight}, expected 1.0"
     
     def test_yield_curve_inversion_increases_signal(self, model):
         """Test that yield curve inversion increases the yield curve signal."""

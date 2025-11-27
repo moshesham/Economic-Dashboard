@@ -2,12 +2,13 @@
 Recession Probability Model
 
 Calculates the probability of a US recession using multiple economic indicators:
-- Yield curve inversions (10Y-2Y spread)
-- Unemployment rate changes
-- Leading Economic Index (LEI)
-- ISM Manufacturing PMI
-- Consumer sentiment
-- Initial jobless claims trends
+- Yield curve inversions (10Y-2Y and 10Y-3M spreads)
+- Labor market (unemployment rate, Sahm Rule, jobless claims)
+- Financial stress (credit spreads, Fed funds rate changes)
+- Economic activity (industrial production, GDP growth)
+- Consumer sentiment (U. Michigan Consumer Sentiment)
+- Housing market (building permits)
+- Stock market performance (S&P 500)
 
 The model uses a weighted scoring approach based on empirical research
 showing the predictive power of each indicator for recessions.
@@ -502,8 +503,8 @@ class RecessionProbabilityModel:
             if key in self.signals
         )
         
-        # Normalize and apply sigmoid-like transformation for better calibration
-        # This maps the raw score to a probability between 0 and 1
+        # The weighted probability is already normalized to 0-1 range
+        # since each signal is 0-1 and weights sum to 1
         probability = weighted_probability
         
         # Determine risk level
