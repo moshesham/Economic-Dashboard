@@ -25,14 +25,12 @@ wheels/
 *.egg
 
 # Data cache and temporary files
-data/cache/
-data/sentiment/
-data/backups/
+# Note: data/cache/, data/sentiment/, and data/backups/ are NOT ignored
+# as they are committed by GitHub Actions workflows for data persistence
 data/duckdb/*.duckdb
 data/duckdb/temp/
 *.tmp
 *.temp
-*.pkl
 
 # Credentials and API keys (IMPORTANT: Never commit these!)
 data/credentials/
