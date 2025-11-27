@@ -8,8 +8,13 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Optional, List
-import yfinance as yf
 from modules.database import get_db_connection
+
+try:
+    import yfinance as yf
+    YF_AVAILABLE = True
+except ImportError:
+    YF_AVAILABLE = False
 
 
 class OptionsMetricsCalculator:
@@ -29,6 +34,9 @@ class OptionsMetricsCalculator:
         Returns:
             Dictionary with options metrics
         """
+        if not YF_AVAILABLE:
+            return {'error': 'yfinance not available'}
+            
         try:
             stock = yf.Ticker(ticker)
             

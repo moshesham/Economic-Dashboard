@@ -16,8 +16,13 @@ from sklearn.metrics import (
     roc_auc_score, roc_curve, confusion_matrix, classification_report,
     log_loss
 )
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+try:
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    PLOTTING_AVAILABLE = True
+except ImportError:
+    PLOTTING_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -340,6 +345,10 @@ class ModelEvaluator:
             title: Plot title
             save_path: Optional path to save plot
         """
+        if not PLOTTING_AVAILABLE:
+            logger.warning("Matplotlib/Seaborn not available. Skipping plot.")
+            return
+
         fpr, tpr, thresholds = roc_curve(y_true, y_proba)
         roc_auc = roc_auc_score(y_true, y_proba)
         
@@ -376,6 +385,10 @@ class ModelEvaluator:
             title: Plot title
             save_path: Optional path to save plot
         """
+        if not PLOTTING_AVAILABLE:
+            logger.warning("Matplotlib/Seaborn not available. Skipping plot.")
+            return
+
         plt.figure(figsize=(8, 6))
         sns.heatmap(
             cm,
@@ -410,6 +423,10 @@ class ModelEvaluator:
             title: Plot title
             save_path: Optional path to save plot
         """
+        if not PLOTTING_AVAILABLE:
+            logger.warning("Matplotlib/Seaborn not available. Skipping plot.")
+            return
+
         if 'rolling_accuracy' not in predictions_df.columns:
             logger.warning("No rolling_accuracy column found")
             return

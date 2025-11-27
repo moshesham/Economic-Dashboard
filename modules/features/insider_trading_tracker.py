@@ -21,13 +21,22 @@ Form 4 Transaction Codes:
 
 import pandas as pd
 import numpy as np
-import yfinance as yf
 import streamlit as st
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Any
 import xml.etree.ElementTree as ET
 
 try:
+    import yfinance as yf
+    YF_AVAILABLE = True
+except ImportError:
+    YF_AVAILABLE = False
+
+try:
+    from modules.database import get_db_connection
+    DB_AVAILABLE = True
+except ImportError:
+    DB_AVAILABLE = False
     from modules.database import get_db_connection
     from modules.sec_data_loader import get_company_submissions, lookup_cik, _download_with_retry, SEC_DATA_HEADERS, SEC_BASE_URL
     DB_AVAILABLE = True
