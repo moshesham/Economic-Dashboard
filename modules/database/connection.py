@@ -31,12 +31,26 @@ class DatabaseConnection:
         db_path = Path(__file__).parent.parent.parent / 'data' / 'duckdb' / 'economic_dashboard.duckdb'
         db_path.parent.mkdir(parents=True, exist_ok=True)
         
+        # Create temp directory
+        temp_dir = Path(__file__).parent.parent.parent / 'data' / 'duckdb' / 'temp'
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        
         self._connection = duckdb.connect(str(db_path))
         
-        # Configure DuckDB for optimal performance
+        # Configure DuckDB for optimal performance and compression
         self._connection.execute("SET threads=4")
         self._connection.execute("SET memory_limit='2GB'")
-        self._connection.execute("SET temp_directory='data/duckdb/temp'")
+        self._connection.execute(f"SET temp_directory='{temp_dir}'")
+        
+        # Enable compression (ZSTD provides best compression ratio)
+        self._connection.execute("SET default_compression='zstd'")
+        
+        # Increase block size for better compression (default is 262144)
+        self._connection.execute("SET default_block_size=524288")
+        
+        # Enable statistics for query optimization
+        self._connection.execute("SET enable_optimizer=true")
+        self._connection.execute("SET enable_profiling=false")  # Disable unless debugging
         
     @property
     def connection(self) -> duckdb.DuckDBPyConnection:
@@ -115,6 +129,52 @@ class DatabaseConnection:
         """Get the number of rows in a table"""
         result = self.query(f"SELECT COUNT(*) as count FROM {table_name}")
         return int(result['count'].iloc[0])
+    
+    def vacuum(self) -> None:
+        """Reclaim space from deleted rows and optimize storage"""
+        self.execute("VACUUM")
+    
+    def checkpoint(self) -> None:
+        """Write all changes to disk and compact the database"""
+        self.execute("CHECKPOINT")
+    
+    def analyze(self, table_name: Optional[str] = None) -> None:
+        """Update table statistics for query optimization"""
+        if table_name:
+            self.execute(f"ANALYZE {table_name}")
+        else:
+            # Analyze all tables
+            tables = self.query("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'main'
+            """)
+            for table in tables['table_name']:
+                self.execute(f"ANALYZE {table}")
+    
+    def get_database_size(self) -> dict:
+        """Get database file size and table sizes"""
+        db_path = Path(__file__).parent.parent.parent / 'data' / 'duckdb' / 'economic_dashboard.duckdb'
+        
+        result = {
+            'database_file_mb': db_path.stat().st_size / (1024 * 1024) if db_path.exists() else 0,
+            'tables': {}
+        }
+        
+        # Get table sizes
+        tables = self.query("""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'main'
+            ORDER BY table_name
+        """)
+        
+        for table_name in tables['table_name']:
+            result['tables'][table_name] = {
+                'rows': self.get_row_count(table_name)
+            }
+        
+        return result
     
     def close(self):
         """Close the database connection"""
