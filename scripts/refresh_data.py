@@ -115,25 +115,48 @@ def fetch_fred_data(series_dict: dict, years_back: int = 20) -> pd.DataFrame:
     return combined_df
 
 
-def fetch_yfinance_data(tickers_dict: dict, years_back: int = 10) -> dict:
-    """Fetch Yahoo Finance data for market indicators."""
+def fetch_yfinance_data(tickers_dict: dict, years_back: int = 10, max_retries: int = 3) -> dict:
+    """Fetch Yahoo Finance data for market indicators with retry logic."""
     print(f"\nFetching {len(tickers_dict)} Yahoo Finance tickers...")
     
     start_date = datetime.now() - pd.DateOffset(years=years_back)
     all_data = {}
     
     for name, ticker in tickers_dict.items():
-        try:
-            print(f"  Fetching {name} ({ticker})...", end=' ')
-            data = yf.download(ticker, start=start_date, progress=False)
-            if not data.empty:
-                all_data[name] = data
-                print("✓")
-            else:
-                print("✗ No data returned")
-        except Exception as e:
-            print(f"✗ Error: {e}")
-            continue
+        success = False
+        for attempt in range(max_retries):
+            try:
+                print(f"  Fetching {name} ({ticker})...", end=' ')
+                
+                # Add delay between requests to avoid rate limiting
+                if attempt > 0:
+                    wait_time = 5 * (attempt + 1)  # Exponential backoff: 10s, 15s
+                    print(f"retry {attempt + 1}/{max_retries} (waiting {wait_time}s)...", end=' ')
+                    time.sleep(wait_time)
+                else:
+                    time.sleep(1)  # Small delay between tickers
+                
+                # Use Ticker object for more reliable fetching
+                ticker_obj = yf.Ticker(ticker)
+                data = ticker_obj.history(start=start_date, auto_adjust=True)
+                
+                if not data.empty and len(data) > 0:
+                    all_data[name] = data
+                    print("✓")
+                    success = True
+                    break
+                else:
+                    print("✗ No data returned")
+                    
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    print(f"✗ Error: {str(e)[:50]}...")
+                else:
+                    print(f"✗ Failed after {max_retries} attempts: {str(e)[:50]}")
+                continue
+        
+        if not success and name not in all_data:
+            print(f"    ⚠️  Skipping {name} after all retries failed")
     
     print(f"Successfully fetched {len(all_data)} tickers")
     return all_data
